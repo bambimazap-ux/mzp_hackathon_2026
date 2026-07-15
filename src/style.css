@@ -62,20 +62,38 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 3rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--panel-border);
+  margin-top: 1.2rem;
+  margin-bottom: 3.5rem;
+  padding: 1rem 2rem;
+  background: rgba(10, 19, 43, 0.45);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 245, 212, 0.4), rgba(57, 255, 20, 0.4), transparent);
 }
 
 .logo-container {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1.2rem;
 }
 
 .logo-container img {
-  height: 60px;
-  width: 60px;
+  height: 50px;
+  width: 50px;
   object-fit: cover;
   border-radius: 50%;
   filter: drop-shadow(0 0 8px rgba(0, 245, 212, 0.2));
@@ -83,19 +101,30 @@ header {
 
 .logo-separator {
   width: 1px;
-  height: 40px;
-  background-color: var(--panel-border);
+  height: 30px;
+  background-color: rgba(255, 255, 255, 0.15);
 }
 
 .header-title {
-  text-align: left;
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .header-title h2 {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: var(--accent-cyan);
   font-weight: 500;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.1rem;
+}
+
+.header-title h1 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
 }
 
 /* Glassmorphic Panels */
