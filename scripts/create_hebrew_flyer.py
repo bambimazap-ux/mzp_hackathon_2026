@@ -26,10 +26,10 @@ def reverse_hebrew_line(line):
 
 def main():
     workspace_dir = r"c:\Users\nafei\Documents\מופ\אפליקציות\האקתון"
-    bg_path = os.path.join(workspace_dir, "clean_flyer_bg.png")
-    logo_mzp_path = os.path.join(workspace_dir, "לוגו מזפ.png")
-    logo_mop_path = os.path.join(workspace_dir, "לוגו מדור מופ.png")
-    output_path = os.path.join(workspace_dir, "hackathon_flyer.png")
+    bg_path = os.path.join(workspace_dir, "assets", "clean_flyer_bg.png")
+    logo_mzp_path = os.path.join(workspace_dir, "assets", "לוגו מזפ.png")
+    logo_mop_path = os.path.join(workspace_dir, "assets", "לוגו מדור מופ.png")
+    output_path = os.path.join(workspace_dir, "assets", "hackathon_flyer.png")
 
     if not os.path.exists(bg_path):
         print(f"Error: Background image not found at {bg_path}")
@@ -42,8 +42,8 @@ def main():
     print(f"Background image loaded: {width}x{height}")
 
     # Download Rubik-Bold and Rubik-Regular fonts for high-quality Hebrew typography
-    font_bold_path = os.path.join(workspace_dir, "Rubik-Bold.ttf")
-    font_reg_path = os.path.join(workspace_dir, "Rubik-Regular.ttf")
+    font_bold_path = os.path.join(workspace_dir, "assets", "Rubik-Bold.ttf")
+    font_reg_path = os.path.join(workspace_dir, "assets", "Rubik-Regular.ttf")
     
     if not os.path.exists(font_bold_path):
         print("Downloading Rubik-Bold font...")

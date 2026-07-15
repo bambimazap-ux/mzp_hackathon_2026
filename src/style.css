@@ -118,7 +118,7 @@ header {
   position: relative;
   text-align: center;
   padding: 4rem 2rem;
-  background-image: linear-gradient(rgba(5, 11, 20, 0.7), rgba(5, 11, 20, 0.9)), url('hackathon_banner.png');
+  background-image: linear-gradient(rgba(5, 11, 20, 0.7), rgba(5, 11, 20, 0.9)), url('../assets/hackathon_banner.png');
   background-size: cover;
   background-position: center;
   border-radius: 24px;
