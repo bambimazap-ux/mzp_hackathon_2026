@@ -950,3 +950,11 @@ textarea.form-control {
     left: 0;
   }
 }
+
+/* Fix select options white-on-white on Windows/Chrome */
+select.form-control option, 
+.score-select option,
+select option {
+  background-color: #050b14 !important; /* Solid dark background matching the site theme */
+  color: #f8fafc !important; /* White text */
+}

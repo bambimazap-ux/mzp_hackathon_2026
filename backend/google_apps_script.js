@@ -23,7 +23,7 @@
 
 // הגדרות ברירת מחדל
 const DEFAULT_PASSCODE = "mzp_judge_2026";
-const GEMINI_MODEL = "gemini-1.5-flash";
+const GEMINI_MODEL = "gemini-3.5-flash";
 
 // ==========================================
 // 1. טיפול בבקשות GET (משיכת נתונים ציבוריים)

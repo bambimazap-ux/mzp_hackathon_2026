@@ -404,11 +404,12 @@ function initChatbotUI() {
         appendMessage(result.reply, 'bot');
       } else {
         // שגיאה או חריגה במגבלת קצב
-        appendMessage('מצטער, סוכן ה-AI עמוס כרגע (מגבלת קצב קריאות). אל דאגה - ניתן להירשם או להעלות שותפים ישירות באמצעות הטפסים הסטנדרטיים באתר!', 'bot');
+        const detail = result.message ? `\n(פרטי שגיאה מהשרת: ${result.message})` : '';
+        appendMessage('מצטער, סוכן ה-AI עמוס כרגע או שקיים קושי בחיבור. אל דאגה - ניתן להירשם או להעלות שותפים ישירות באמצעות הטפסים הסטנדרטיים באתר!' + detail, 'bot');
       }
     } catch (e) {
       removeLoadingMessage(loadingId);
-      appendMessage('מצטער, חלה שגיאה בחיבור לסוכן ה-AI. אנא נסו שוב מאוחר יותר או השתמשו בטפסים הרגילים.', 'bot');
+      appendMessage('מצטער, חלה שגיאה בחיבור לסוכן ה-AI.\n(פרטי שגיאה: ' + e.message + ')', 'bot');
     } finally {
       // הפעלת מנגנון השהיית כפתור
       setTimeout(() => {
