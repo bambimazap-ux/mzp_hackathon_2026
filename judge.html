@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>מערכת שיפוט - האקתון AI מז"פ 2026</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body id="judge-page">
+
+  <div class="container fade-in">
+    <!-- Passcode Verification Screen (Shown by default) -->
+    <div id="passcode-screen" class="glass-card passcode-container">
+      <div style="margin-bottom: 2rem;">
+        <img src="לוגו מדור מופ.png" alt="לוגו מופ" style="height: 80px; filter: drop-shadow(0 0 10px rgba(0, 245, 212, 0.2));">
+      </div>
+      <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">מערכת שיפוט והערכה - האקתון מז"פ</h3>
+      <p style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem;">הזן את קוד הגישה החסוי שקיבלת כדי לגשת לנתוני ההגשות ולדירוגי השופטים:</p>
+      
+      <div class="form-group">
+        <input type="password" id="judge-passcode-input" class="form-control" placeholder="קוד גישה חסוי" style="text-align: center; font-size: 1.2rem; letter-spacing: 2px;" required>
+      </div>
+      <button id="verify-passcode-btn" class="btn btn-primary" style="width: 100%;">
+        <i class="fa-solid fa-lock-open"></i> התחבר למערכת
+      </button>
+      <div style="margin-top: 1.5rem;">
+        <a href="index.html" style="color: var(--accent-cyan); text-decoration: none; font-size: 0.9rem;">
+          <i class="fa-solid fa-arrow-right"></i> חזרה לפורטל הציבורי
+        </a>
+      </div>
+    </div>
+
+    <!-- Main Judging Dashboard (Hidden by default, shown after passcode auth) -->
+    <div id="judging-dashboard" style="display: none;">
+      <header>
+        <div class="logo-container">
+          <img src="לוגו מזפ.png" alt="לוגו מזפ">
+          <div class="logo-separator"></div>
+          <img src="לוגו מדור מופ.png" alt="לוגו מופ">
+        </div>
+        <div class="header-title" style="text-align: left;">
+          <h2 style="color: var(--accent-cyan);">מערכת שיפוט פנימית</h2>
+          <h1 style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary);">האקתון AI מז"פ 2026</h1>
+        </div>
+      </header>
+
+      <!-- Tabs Navigation -->
+      <div class="tabs-container">
+        <button class="tab-btn active" id="tab-screening-btn">
+          <i class="fa-solid fa-filter"></i> שלב א': סינון והערכת הגשות
+        </button>
+        <button class="tab-btn" id="tab-finals-btn">
+          <i class="fa-solid fa-trophy"></i> שלב ב': שיפוט הגמר (3 הגדולים)
+        </button>
+      </div>
+
+      <!-- STAGE A: SCREENING AND SELECTION PANEL -->
+      <div id="panel-screening" class="tab-panel">
+        <div class="glass-card">
+          <div class="section-header">
+            <h2 class="section-title">הערכת כלל ההצעות שהוגשו</h2>
+            <button class="btn btn-secondary" onclick="loadJudgingData()">
+              <i class="fa-solid fa-rotate"></i> רענן נתונים
+            </button>
+          </div>
+          <p style="color: var(--text-secondary); margin-bottom: 2rem;">לחצו על פרויקט בטבלה כדי לפתוח את ממשק הניקוד עבורו. המערכת תחשב אוטומטית את ממוצע הציונים.</p>
+          
+          <div class="judge-table-container">
+            <table class="judge-table" id="screening-table">
+              <thead>
+                <tr>
+                  <th>מזהה</th>
+                  <th>שם הפרויקט</th>
+                  <th>חברי הצוות</th>
+                  <th>תיאור האתגר והפתרון</th>
+                  <th>ציון ממוצע</th>
+                  <th>פעולה</th>
+                </tr>
+              </thead>
+              <tbody id="screening-tbody">
+                <tr>
+                  <td colspan="6" style="text-align: center; color: var(--text-secondary);">טוען נתונים...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Leaderboard Stage A -->
+        <div class="glass-card" style="border-color: rgba(0, 245, 212, 0.2);">
+          <div class="section-header">
+            <h2 class="section-title" style="color: var(--accent-cyan);"><i class="fa-solid fa-ranking-stars"></i> טבלת מובילים - שלב א'</h2>
+          </div>
+          <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">דירוג הפרויקטים על פי ממוצע הציונים המשוקלל של כל השופטים. שלוש ההצעות המובילות יעפילו להאקתון.</p>
+          
+          <div class="judge-table-container">
+            <table class="judge-table" id="screening-leaderboard">
+              <thead>
+                <tr>
+                  <th>מיקום</th>
+                  <th>שם הפרויקט</th>
+                  <th>חברי הצוות</th>
+                  <th>ממוצע רלוונטיות</th>
+                  <th>ממוצע ישימות</th>
+                  <th>ממוצע חדשנות</th>
+                  <th>ציון משוקלל סופי</th>
+                  <th>סטטוס</th>
+                </tr>
+              </thead>
+              <tbody id="screening-leaderboard-tbody">
+                <tr>
+                  <td colspan="8" style="text-align: center; color: var(--text-secondary);">אין עדיין דירוגים להצגה.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- STAGE B: HACKATHON FINALS PANEL -->
+      <div id="panel-finals" class="tab-panel" style="display: none;">
+        <div class="glass-card">
+          <div class="section-header">
+            <h2 class="section-title">שיפוט הגמר הגדול (הערכת תוצרי POC)</h2>
+            <button class="btn btn-secondary" onclick="loadJudgingData()">
+              <i class="fa-solid fa-rotate"></i> רענן נתונים
+            </button>
+          </div>
+          <p style="color: var(--text-secondary); margin-bottom: 2rem;">כאן מוצגים 3 הפרויקטים שעלו לגמר. השופטים ידרגו את האפליקציות בפועל לאחר הצגת ה-Pitch והדגמת ה-POC החי.</p>
+          
+          <div class="judge-table-container">
+            <table class="judge-table" id="finals-table">
+              <thead>
+                <tr>
+                  <th>מזהה</th>
+                  <th>שם הפרויקט Finalist</th>
+                  <th>חברי הצוות</th>
+                  <th>קישור ל-POC (אפליקציה)</th>
+                  <th>ציון גמר ממוצע</th>
+                  <th>פעולה</th>
+                </tr>
+              </thead>
+              <tbody id="finals-tbody">
+                <tr>
+                  <td colspan="5" style="text-align: center; color: var(--text-secondary);">טוען עולים לגמר...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Leaderboard Stage B (Final Results) -->
+        <div class="glass-card" style="border-color: rgba(57, 255, 20, 0.2);">
+          <div class="section-header">
+            <h2 class="section-title" style="color: var(--accent-neon);"><i class="fa-solid fa-trophy"></i> דירוג תוצאות הגמר 🏆</h2>
+          </div>
+          <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">ממוצע הציונים הסופי של שלב הגמר. הצוות במקום הראשון יזכה בפגרת המפקד!</p>
+          
+          <div class="judge-table-container">
+            <table class="judge-table" id="finals-leaderboard">
+              <thead>
+                <tr>
+                  <th>מיקום</th>
+                  <th>שם הפרויקט</th>
+                  <th>חברי הצוות</th>
+                  <th>רלוונטיות (גמר)</th>
+                  <th>ישימות (גמר)</th>
+                  <th>חדשנות (גמר)</th>
+                  <th>ציון גמר סופי</th>
+                  <th>הערות שופטים</th>
+                </tr>
+              </thead>
+              <tbody id="finals-leaderboard-tbody">
+                <tr>
+                  <td colspan="8" style="text-align: center; color: var(--text-secondary);">אין עדיין דירוגים להצגה.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCORE ENTRY MODAL -->
+  <div class="modal-overlay" id="score-modal">
+    <div class="modal-content">
+      <button class="close-modal"><i class="fa-solid fa-xmark"></i></button>
+      <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--accent-cyan);" id="score-modal-project-title">
+        הזנת ציון לפרויקט
+      </h3>
+      <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;" id="score-modal-stage-title">שלב א': סינון הצעות</p>
+      
+      <form id="score-form">
+        <input type="hidden" id="score-project-id">
+        <input type="hidden" id="score-stage-name" value="Screening">
+
+        <div class="form-group">
+          <label for="judge-name-input">שם השופט:</label>
+          <input type="text" id="judge-name-input" class="form-control" placeholder="הקלידו את שמכם" required>
+        </div>
+
+        <div class="form-group">
+          <label for="score-relevance"><i class="fa-solid fa-bullseye" style="color: var(--accent-cyan);"></i> ציון רלוונטיות למז"פ (1-5):</label>
+          <select id="score-relevance" class="form-control" required>
+            <option value="5">5 - גבוה מאוד: עונה על אתגר קריטי ומיידי</option>
+            <option value="4">4 - גבוה: יעיל מאוד לעבודה היומית</option>
+            <option value="3">3 - בינוני: מסייע בייעול מסוים</option>
+            <option value="2">2 - נמוך: רלוונטיות קטנה מאוד</option>
+            <option value="1">1 - לא רלוונטי: אינו קשור לעבודת מז"פ</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="score-feasibility"><i class="fa-solid fa-screwdriver-wrench" style="color: var(--accent-neon);"></i> ציון ישימות טכנולוגית ומבצעית (1-5):</label>
+          <select id="score-feasibility" class="form-control" required>
+            <option value="5">5 - פשוט מאוד: מוכן להטמעה מיידית</option>
+            <option value="4">4 - ישים: דורש התאמות קלות</option>
+            <option value="3">3 - בינוני: דורש מאמץ סביר לפיתוח</option>
+            <option value="2">2 - מורכב: מצריך שינויי תשתית משמעותיים</option>
+            <option value="1">1 - לא ישים: מורכב מדי או לא ניתן לביצוע בלמ"ס</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="score-innovation"><i class="fa-solid fa-lightbulb" style="color: #eab308;"></i> ציון חדשנות ומקוריות (1-5):</label>
+          <select id="score-innovation" class="form-control" required>
+            <option value="5">5 - פורץ דרך: שימוש מקורי ביותר ב-AI</option>
+            <option value="4">4 - חדשני: פתרון יצירתי שאינו מקובל כיום</option>
+            <option value="3">3 - סביר: שדרוג מוצלח של כלי קיים</option>
+            <option value="2">2 - רגיל: רעיון מוכר עם יישום סטנדרטי</option>
+            <option value="1">1 - נדוש: העתקה של פתרון קיים ללא ערך מוסף</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="score-notes">הערות ומשוב חופשי (למועמדים):</label>
+          <textarea id="score-notes" class="form-control" placeholder="נקודות לשיפור, המלצות לביצוע או סיבת הדירוג..."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+          <i class="fa-solid fa-floppy-disk"></i> שמור ושלח ציון במערכת
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div class="toast-notification" id="toast-container">
+    <span id="toast-icon"></span>
+    <span id="toast-message"></span>
+  </div>
+
+  <!-- Scripts -->
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
