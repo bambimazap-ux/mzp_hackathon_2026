@@ -75,7 +75,9 @@ header {
 
 .logo-container img {
   height: 60px;
-  object-fit: contain;
+  width: 60px;
+  object-fit: cover;
+  border-radius: 50%;
   filter: drop-shadow(0 0 8px rgba(0, 245, 212, 0.2));
 }
 
