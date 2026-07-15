@@ -67,6 +67,12 @@ function doPost(e) {
       response = getJudgingData(payload.passcode);
     } else if (action === "submit_score") {
       response = submitScore(payload);
+    } else if (action === "vote_idea") {
+      response = voteIdea(payload);
+    } else if (action === "get_system_settings") {
+      response = getSystemSettings();
+    } else if (action === "update_system_settings") {
+      response = updateSystemSettings(payload);
     } else if (action === "gemini_chat") {
       response = handleGeminiChat(payload.message);
     } else {
@@ -88,11 +94,11 @@ function doPost(e) {
 function getPublicData() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   
-  // 1. קריאת רעיונות
+  // 1. קריאת רעיונות (8 עמודות כולל הצבעות)
   var ideasSheet = ss.getSheetByName("Ideas");
   var ideas = [];
   if (ideasSheet && ideasSheet.getLastRow() > 1) {
-    var data = ideasSheet.getRange(2, 1, ideasSheet.getLastRow() - 1, 7).getValues();
+    var data = ideasSheet.getRange(2, 1, ideasSheet.getLastRow() - 1, 8).getValues();
     ideas = data.map(function(row) {
       return {
         id: row[0],
@@ -101,7 +107,8 @@ function getPublicData() {
         problem: row[3],
         teammates: row[4],
         status: row[5],
-        projectURL: row[6]
+        projectURL: row[6],
+        votes: Number(row[7]) || 0
       };
     });
   }
@@ -123,10 +130,13 @@ function getPublicData() {
     });
   }
 
+  var settings = getSystemSettings();
+
   return {
     status: "success",
     ideas: ideas,
-    teammates: teammates
+    teammates: teammates,
+    settings: settings
   };
 }
 
@@ -149,7 +159,7 @@ function submitIdea(payload) {
     }
 
     var timestamp = new Date();
-    // עמודות: ID | Timestamp | Title | Problem | Teammates | Status | ProjectURL
+    // עמודות: ID | Timestamp | Title | Problem | Teammates | Status | ProjectURL | Votes
     sheet.appendRow([
       nextId, 
       timestamp, 
@@ -157,7 +167,8 @@ function submitIdea(payload) {
       payload.problem, 
       payload.teammates, 
       "מועמד", 
-      ""
+      "",
+      0 // Votes initialized to 0
     ]);
 
     return { status: "success", id: nextId };
@@ -262,10 +273,13 @@ function getJudgingData(passcode) {
     });
   }
 
+  var settings = getSystemSettings();
+
   return {
     status: "success",
     ideas: ideas,
-    scores: scores
+    scores: scores,
+    settings: settings
   };
 }
 
@@ -275,6 +289,13 @@ function submitScore(payload) {
   var auth = verifyJudge(payload.passcode);
   if (auth.status !== "success") {
     return { status: "error", message: "Access Denied: Invalid Passcode" };
+  }
+  
+  // בדיקה האם השיפוט נעול
+  var props = PropertiesService.getScriptProperties();
+  var judgingActive = props.getProperty("JUDGING_ACTIVE");
+  if (judgingActive === "false") {
+    return { status: "error", message: "השיפוט נעול כעת על ידי מנהלי ההאקתון" };
   }
 
   var lock = LockService.getScriptLock();
@@ -332,15 +353,13 @@ function handleGeminiChat(userMessage) {
 
   // הגדרת הנחיות מנחות לבוט (System Instructions) המעוגנות בתוכן ההאקתון
   var systemInstruction = 
-    "אתה סוכן ה-AI האישי של האקתון מז\"פ 2026. פותחת על ידי מדור מו\"פ. תפקידך לענות על שאלות ולעזור לזקק רעיונות.\n" +
-    "חוקי ההאקתון בקצרה:\n" +
-    "- Vibe Coding: פיתוח ללא קוד באמצעות הנחיות בלבד.\n" +
-    "- צוותים של עד 3 משתתפים ממז\"פ.\n" +
-    "- בטיחות: עבודה ברשת אזרחית (בלמ\"ס) לחלוטין. אסור להשתמש בנתונים אמיתיים, רק נתוני דמה (Dummy).\n" +
-    "- פרס: פגרת מפקד ותעודת הערכה למקום הראשון.\n" +
-    "- לוחות זמנים: שבוע 1 - הרשמה והגשת רעיונות. שבוע 2 - סינון ובחירת 3 פרויקטים. שבוע 3 - יום ההאקתון (בבית מורשת/חד\"ן).\n" +
-    "תשובותיך צריכות להיות בעברית מקצועית, קצרות, ממוקדות וישר לעניין (עד 3-4 משפטים). " +
-    "אם המשתמש מציג רעיון, עזור לו לנסח בקצרה ובצורה מובנית את 'הבעיה' ו'הפתרון' כדי שיעתיק לטופס ההרשמה.";
+    "אתה סוכן ה-AI האישי של האקתון מז\"פ 2026. עליך לענות תמיד **במשפט אחד או שניים קצרים בלבד (עד 35 מילים במצטבר)**. " +
+    "התשובה חייבת להיות מלאה, קצרה ותמציתית ביותר, ואסור לה להקטע. אל תכתוב פסקאות ואל תרחיב כלל.\n" +
+    "חוקי ההאקתון:\n" +
+    "- פיתוח ללא קוד (Vibe Coding) באמצעות פרומפטים ברשת בלמ\"ס אזרחית (עם נתוני דמה בלבד!).\n" +
+    "- צוותים של עד 3 שותפים. פרס: פגרת מפקד ותעודה.\n" +
+    "- שבוע 1 הרשמה, שבוע 2 סינון 3 עולים, שבוע 3 יום ההאקתון.\n" +
+    "אם מישהו מבקש עזרה ברעיון, נסח לו את הבעיה והפתרון ב-2 שורות קצרות בלבד.";
 
   var url = "https://generativelanguage.googleapis.com/v1beta/models/" + GEMINI_MODEL + ":generateContent?key=" + apiKey;
 
@@ -356,8 +375,8 @@ function handleGeminiChat(userMessage) {
       parts: [{ text: systemInstruction }]
     },
     generationConfig: {
-      temperature: 0.7,
-      maxOutputTokens: 300
+      temperature: 0.2,
+      maxOutputTokens: 400
     }
   };
 
@@ -385,4 +404,89 @@ function handleGeminiChat(userMessage) {
     Logger.log("UrlFetch Error: " + error.toString());
     return { status: "error", message: error.toString() };
   }
+}
+
+// ==========================================
+// 4. הצבעת קהל וניהול שלבי האקתון
+// ==========================================
+
+// הצבעה לרעיון (מוגן מפני נעילות)
+function voteIdea(payload) {
+  var props = PropertiesService.getScriptProperties();
+  var votingActive = props.getProperty("PUBLIC_VOTING_ACTIVE");
+  if (votingActive === "false") {
+    return { status: "error", message: "הצבעת הקהל נעולה כעת על ידי מנהלי ההאקתון" };
+  }
+
+  var lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(15000);
+    
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("Ideas");
+    if (!sheet) return { status: "error", message: "Ideas sheet not found" };
+
+    var ideaId = Number(payload.ideaId);
+    var lastRow = sheet.getLastRow();
+    var foundRow = -1;
+    
+    // חיפוש השורה של הרעיון
+    if (lastRow > 1) {
+      var ids = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+      for (var i = 0; i < ids.length; i++) {
+        if (Number(ids[i][0]) === ideaId) {
+          foundRow = i + 2;
+          break;
+        }
+      }
+    }
+
+    if (foundRow === -1) {
+      return { status: "error", message: "הרעיון לא נמצא במאגר" };
+    }
+
+    // קריאת והגדלת הצבעות (עמודה 8)
+    var currentVotes = Number(sheet.getRange(foundRow, 8).getValue()) || 0;
+    var newVotes = currentVotes + 1;
+    sheet.getRange(foundRow, 8).setValue(newVotes);
+
+    return { status: "success", votes: newVotes };
+  } catch (error) {
+    return { status: "error", message: error.toString() };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// קריאת הגדרות מערכת ציבוריות
+function getSystemSettings() {
+  var props = PropertiesService.getScriptProperties();
+  return {
+    status: "success",
+    judgingActive: props.getProperty("JUDGING_ACTIVE") !== "false", // default: true
+    publicVotingActive: props.getProperty("PUBLIC_VOTING_ACTIVE") !== "false", // default: true
+    leaderboardPublic: props.getProperty("LEADERBOARD_PUBLIC") === "true" // default: false
+  };
+}
+
+// עדכון הגדרות מערכת (מאובטח עם סיסמת שופט)
+function updateSystemSettings(payload) {
+  var auth = verifyJudge(payload.passcode);
+  if (auth.status !== "success") {
+    return { status: "error", message: "Access Denied" };
+  }
+
+  var props = PropertiesService.getScriptProperties();
+  
+  if (payload.judgingActive !== undefined) {
+    props.setProperty("JUDGING_ACTIVE", String(payload.judgingActive));
+  }
+  if (payload.publicVotingActive !== undefined) {
+    props.setProperty("PUBLIC_VOTING_ACTIVE", String(payload.publicVotingActive));
+  }
+  if (payload.leaderboardPublic !== undefined) {
+    props.setProperty("LEADERBOARD_PUBLIC", String(payload.leaderboardPublic));
+  }
+
+  return { status: "success", settings: getSystemSettings() };
 }

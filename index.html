@@ -10,17 +10,9 @@
 <body>
 
   <div class="container fade-in">
-    <!-- Header with dual logos -->
-    <header>
-      <div class="logo-container">
-        <img src="assets/לוגו מזפ.png" alt="לוגו מזפ - החטיבה לזיהוי פלילי">
-        <div class="logo-separator"></div>
-        <img src="assets/לוגו מדור מופ.png" alt="לוגו מדור מחקר ופיתוח">
-      </div>
-      <div class="header-title">
-        <h2>מדור מחקר ופיתוח</h2>
-        <h1>החטיבה לזיהוי פלילי</h1>
-      </div>
+    <!-- Header with unified banner -->
+    <header class="main-header">
+      <img src="assets/header_banner.png" alt="החטיבה לזיהוי פלילי - מדור מחקר ופיתוח" class="header-banner-img">
     </header>
 
     <!-- Hero Banner -->
@@ -122,6 +114,24 @@
       </div>
     </section>
 
+    <!-- Project Submissions & Public Voting -->
+    <section class="glass-card" id="public-ideas-section">
+      <div class="section-header">
+        <h2 class="section-title">הצבעת הקהל: הרעיונות שלכם 🔼</h2>
+        <div style="font-size: 0.95rem; color: var(--accent-cyan); font-weight: 700; background: rgba(0,245,212,0.1); padding: 0.3rem 0.8rem; border-radius: 20px; border: 1px solid rgba(0,245,212,0.2);" id="user-vote-status">
+          טוען מצב הצבעה...
+        </div>
+      </div>
+      <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.95rem;">קראו את הצעות ה-AI שהוגשו על ידי שוטרי החטיבה, והצביעו בעד **עד שלושה רעיונות** שאתם הכי רוצים לראות מפותחים בהאקתון! הצבעת הקהל תסייע לשופטים לבחור את העולים לגמר.</p>
+      
+      <div class="ideas-grid" id="public-ideas-container">
+        <div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 2rem;">
+          <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 1rem; color: var(--accent-cyan);"></i>
+          <p>טוען את הרעיונות שהוגשו...</p>
+        </div>
+      </div>
+    </section>
+
     <!-- Teammates Board -->
     <section class="glass-card">
       <div class="section-header">
@@ -129,19 +139,6 @@
         <button class="btn btn-accent" id="open-recruit-btn-2">
           <i class="fa-solid fa-user-plus"></i> הוסף מודעה משלך
         </button>
-      </div>
-      <div class="form-group" style="max-width: 300px; margin-bottom: 2rem;">
-        <label for="dept-filter"><i class="fa-solid fa-filter"></i> סנן לפי מדור/מעבדה:</label>
-        <select id="dept-filter" class="form-control">
-          <option value="all">כל המעבדות והמדורים</option>
-          <option value="זירה">זירה</option>
-          <option value="דנ\"א">מעבדת דנ"א</option>
-          <option value="טביעות אצבע">מעבדת טביעות אצבע</option>
-          <option value="חנ\"מ ורעלים">חנ"מ ורעלים</option>
-          <option value="סמים">מעבדת סמים</option>
-          <option value="נשק ומסמכים">מעבדת נשק ומסמכים</option>
-          <option value="אחר">אחר</option>
-        </select>
       </div>
 
       <div class="teammate-grid" id="teammate-container">
@@ -175,7 +172,10 @@
             <div style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 400;">זמין לשאלות וסיעור מוחות</div>
           </div>
         </div>
-        <button class="chat-close-btn" id="chat-close-btn"><i class="fa-solid fa-xmark"></i></button>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <button class="chat-header-btn" id="chat-maximize-btn" title="הגדל חלון"><i class="fa-solid fa-expand"></i></button>
+          <button class="chat-close-btn" id="chat-close-btn" title="סגור"><i class="fa-solid fa-xmark"></i></button>
+        </div>
       </div>
       <div class="chat-messages" id="chat-messages">
         <div class="chat-msg chat-msg-bot">
@@ -241,19 +241,6 @@
         <div class="form-group">
           <label for="recruit-name">השם שלי:</label>
           <input type="text" id="recruit-name" class="form-control" placeholder="הזינו שם מלא" required>
-        </div>
-        <div class="form-group">
-          <label for="recruit-dept">מדור / מעבדה במז"פ:</label>
-          <select id="recruit-dept" class="form-control" required>
-            <option value="" disabled selected>בחרו מעבדה או מדור</option>
-            <option value="זירה">זירה</option>
-            <option value="דנ\"א">מעבדת דנ"א</option>
-            <option value="טביעות אצבע">מעבדת טביעות אצבע</option>
-            <option value="חנ\"מ ורעלים">חנ"מ ורעלים</option>
-            <option value="סמים">מעבדת סמים</option>
-            <option value="נשק ומסמכים">מעבדת נשק ומסמכים</option>
-            <option value="אחר">אחר</option>
-          </select>
         </div>
         <div class="form-group">
           <label for="recruit-desc">מה הרעיון שלי / מה אני מחפש בצוות?</label>

@@ -33,25 +33,21 @@
 
     <!-- Main Judging Dashboard (Hidden by default, shown after passcode auth) -->
     <div id="judging-dashboard" style="display: none;">
-      <header>
-        <div class="logo-container">
-          <img src="assets/לוגו מזפ.png" alt="לוגו מזפ">
-          <div class="logo-separator"></div>
-          <img src="assets/לוגו מדור מופ.png" alt="לוגו מופ">
-        </div>
-        <div class="header-title">
-          <h2>מערכת שיפוט פנימית</h2>
-          <h1>האקתון AI מז"פ 2026</h1>
-        </div>
+      <!-- Header with unified banner -->
+      <header class="main-header">
+        <img src="assets/judge_header_banner.png" alt="מערכת שיפוט פנימית - האקתון AI מז\"פ 2026" class="header-banner-img">
       </header>
 
       <!-- Tabs Navigation -->
       <div class="tabs-container">
         <button class="tab-btn active" id="tab-screening-btn">
-          <i class="fa-solid fa-filter"></i> שלב א': סינון והערכת הגשות
+          <i class="fa-solid fa-list-check"></i> שלב א': סינון והגשות (כל הרעיונות)
         </button>
         <button class="tab-btn" id="tab-finals-btn">
           <i class="fa-solid fa-trophy"></i> שלב ב': שיפוט הגמר (3 הגדולים)
+        </button>
+        <button class="tab-btn" id="tab-settings-btn">
+          <i class="fa-solid fa-sliders"></i> פאנל ניהול ושליטה
         </button>
       </div>
 
@@ -178,6 +174,80 @@
               </tbody>
             </table>
           </div>
+        </div>
+      </div>
+
+      <!-- STAGE C: HACKATHON CONTROL PANEL -->
+      <div id="panel-settings" class="tab-panel" style="display: none;">
+        <div class="glass-card" style="border-color: rgba(0, 245, 212, 0.2);">
+          <div class="section-header">
+            <h2 class="section-title"><i class="fa-solid fa-sliders"></i> פאנל ניהול האקתון ושליטה בשלבים</h2>
+          </div>
+          <p style="color: var(--text-secondary); margin-bottom: 2rem;">מנהלי ההאקתון יכולים לשלוט כאן במצב ההצבעות, השיפוט ופרסום התוצאות הסופיות לציבור בזמן אמת.</p>
+          
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+            
+            <!-- Toggle 1: Public Voting -->
+            <div class="settings-card" style="background: rgba(255,255,255,0.02); border: 1px solid var(--panel-border); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
+              <div>
+                <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;"><i class="fa-solid fa-users"></i> הצבעת הקהל (Upvotes)</h4>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">שליטה האם שוטרים מחוץ לסגל הפיקוד יכולים להצביע עבור הרעיונות המועדפים עליהם באתר הציבורי.</p>
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <button class="btn btn-primary" id="btn-voting-enable" onclick="toggleSetting('publicVotingActive', true)">
+                  <i class="fa-solid fa-play"></i> הפעל הצבעות
+                </button>
+                <button class="btn btn-secondary" id="btn-voting-disable" onclick="toggleSetting('publicVotingActive', false)" style="border-color: rgba(239,68,68,0.3); color: #ef4444;">
+                  <i class="fa-solid fa-pause"></i> נעל הצבעות
+                </button>
+              </div>
+            </div>
+
+            <!-- Toggle 2: Judging Status -->
+            <div class="settings-card" style="background: rgba(255,255,255,0.02); border: 1px solid var(--panel-border); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
+              <div>
+                <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;"><i class="fa-solid fa-gavel"></i> שיפוט השופטים (Scores)</h4>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">נעילת שלב הזנת הציונים על ידי השופטים. כאשר השיפוט נעול, לא ניתן להזין או לשנות ציונים בטבלה.</p>
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <button class="btn btn-primary" id="btn-judging-enable" onclick="toggleSetting('judgingActive', true)">
+                  <i class="fa-solid fa-play"></i> פתח שיפוט
+                </button>
+                <button class="btn btn-secondary" id="btn-judging-disable" onclick="toggleSetting('judgingActive', false)" style="border-color: rgba(239,68,68,0.3); color: #ef4444;">
+                  <i class="fa-solid fa-lock"></i> נעל שיפוט
+                </button>
+              </div>
+            </div>
+
+            <!-- Toggle 3: Leaderboard Visibility -->
+            <div class="settings-card" style="background: rgba(255,255,255,0.02); border: 1px solid var(--panel-border); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
+              <div>
+                <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;"><i class="fa-solid fa-eye"></i> חשיפת תוצאות לציבור</h4>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">פרסום דירוג 3 הפרויקטים שעלו לגמר ההאקתון (POC) בעמוד הבית הציבורי של האתר הראשי.</p>
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <button class="btn btn-primary" id="btn-leaderboard-enable" onclick="toggleSetting('leaderboardPublic', true)">
+                  <i class="fa-solid fa-eye"></i> פרסם תוצאות
+                </button>
+                <button class="btn btn-secondary" id="btn-leaderboard-disable" onclick="toggleSetting('leaderboardPublic', false)">
+                  <i class="fa-solid fa-eye-slash"></i> הסתר תוצאות
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Public Vote Winner card -->
+          <div class="settings-card" style="background: rgba(0,245,212,0.03); border: 1px solid rgba(0,245,212,0.2); border-radius: 16px; padding: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem;">
+            <div>
+              <h4 style="font-size: 1.2rem; font-weight: 700; color: var(--accent-cyan); margin-bottom: 0.3rem;"><i class="fa-solid fa-heart"></i> הפרויקט המוביל בהצבעת הקהל ("חביב הקהל")</h4>
+              <p style="font-size: 0.9rem; color: var(--text-secondary);" id="public-winner-text">טוען נתונים...</p>
+            </div>
+            <div style="font-size: 2.2rem; color: var(--accent-cyan);">
+              <i class="fa-solid fa-crown"></i>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>

@@ -204,7 +204,7 @@ function initPortalUI() {
       const payload = {
         action: 'add_teammate_wanted',
         name: document.getElementById('recruit-name').value,
-        department: document.getElementById('recruit-dept').value,
+        department: '',
         description: document.getElementById('recruit-desc').value,
         contact: document.getElementById('recruit-contact').value
       };
@@ -224,14 +224,6 @@ function initPortalUI() {
     });
   }
 
-  // פילטר לוח שותפים
-  const deptFilter = document.getElementById('dept-filter');
-  if (deptFilter) {
-    deptFilter.addEventListener('change', () => {
-      renderTeammates(deptFilter.value);
-    });
-  }
-
   // טעינת נתונים ראשונית
   loadPortalData();
 }
@@ -245,7 +237,11 @@ async function loadPortalData() {
     allTeammates = result.teammates || [];
     renderTeammates('all');
 
-    // 2. עדכון ציר הזמן והתוצרים (POC Showcase)
+    // 2. עדכון לוח הרעיונות והצבעות הקהל
+    const settings = result.settings || {};
+    renderPublicIdeas(result.ideas || [], settings);
+
+    // 3. עדכון ציר הזמן והתוצרים (POC Showcase / גמר ההאקתון)
     const finalists = result.ideas ? result.ideas.filter(idea => idea.status === 'נבחר להאקתון' || idea.status === 'זוכה') : [];
     
     const pocSection = document.getElementById('poc-showcase-section');
@@ -254,12 +250,20 @@ async function loadPortalData() {
     const step2 = document.getElementById('tl-step-2');
     const step3 = document.getElementById('tl-step-3');
 
+    // קידום ציר הזמן לפי המצב בפועל
     if (finalists.length > 0) {
-      // אם נבחרו מועמדים, מקדמים את ציר הזמן
       if (step1) step1.classList.remove('active');
       if (step2) step2.classList.add('active');
-      if (step3) step3.classList.add('active');
+      
+      const hasWinner = finalists.some(idea => idea.status === 'זוכה');
+      if (hasWinner && step3) {
+        step3.classList.add('active');
+      }
+    }
 
+    const isLeaderboardPublic = settings.leaderboardPublic === true;
+
+    if (finalists.length > 0 && isLeaderboardPublic) {
       if (pocSection && pocContainer) {
         pocSection.style.display = 'block';
         pocContainer.innerHTML = '';
@@ -285,7 +289,6 @@ async function loadPortalData() {
         });
       }
     } else {
-      // לוח הגמר ריק
       if (pocSection) pocSection.style.display = 'none';
     }
   } else {
@@ -309,15 +312,13 @@ function renderTeammates(filterDept = 'all') {
 
   container.innerHTML = '';
   
-  const filtered = filterDept === 'all' 
-    ? allTeammates 
-    : allTeammates.filter(t => t.department === filterDept);
+  const filtered = allTeammates;
 
   if (filtered.length === 0) {
     container.innerHTML = `
       <div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 2rem;">
         <i class="fa-solid fa-folder-open" style="font-size: 2rem; margin-bottom: 1rem;"></i>
-        <p>אין כרגע מודעות גיוס בקטגוריה זו.</p>
+        <p>אין כרגע מודעות גיוס שותפים.</p>
       </div>
     `;
     return;
@@ -336,7 +337,6 @@ function renderTeammates(filterDept = 'all') {
     card.innerHTML = `
       <div class="teammate-header">
         <div class="teammate-name">${item.name}</div>
-        <div class="teammate-dept">${item.department}</div>
       </div>
       <div class="teammate-desc">${item.description}</div>
       <a href="${waUrl}" target="_blank" class="btn btn-secondary btn-sm" style="font-size: 0.85rem; padding: 0.5rem 1rem; width: 100%; text-align: center; border-color: rgba(57, 255, 20, 0.2);">
@@ -346,6 +346,114 @@ function renderTeammates(filterDept = 'all') {
     container.appendChild(card);
   });
 }
+
+// שמירת מזהים שהוצבעו
+function getVotedIdeas() {
+  try {
+    const data = localStorage.getItem('voted_ideas');
+    return data ? JSON.parse(data) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+// רינדור לוח רעיונות והצבעות ציבורי
+function renderPublicIdeas(ideas = [], settings = {}) {
+  const container = document.getElementById('public-ideas-container');
+  if (!container) return;
+
+  container.innerHTML = '';
+  
+  // סינון רעיונות שנמחקו
+  const validIdeas = ideas.filter(idea => idea.status !== 'deleted');
+  
+  if (validIdeas.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 2rem;">
+        <i class="fa-solid fa-folder-open" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+        <p>טרם הוגשו הצעות פרויקטים להאקתון. היו הראשונים להגיש!</p>
+      </div>
+    `;
+    return;
+  }
+
+  const votedIdeas = getVotedIdeas();
+  const votesCount = votedIdeas.length;
+  
+  // עדכון כיתוב סטטוס הצבעה של המשתמש
+  const statusEl = document.getElementById('user-vote-status');
+  if (statusEl) {
+    if (settings.publicVotingActive === false) {
+      statusEl.innerHTML = `<i class="fa-solid fa-lock"></i> הצבעת הקהל נעולה כעת`;
+      statusEl.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+      statusEl.style.color = '#ef4444';
+      statusEl.style.background = 'rgba(239, 68, 68, 0.1)';
+    } else {
+      statusEl.innerHTML = `הצבעת ל-${votesCount} מתוך 3 רעיונות`;
+      statusEl.style.borderColor = 'rgba(0, 245, 212, 0.2)';
+      statusEl.style.color = 'var(--accent-cyan)';
+      statusEl.style.background = 'rgba(0, 245, 212, 0.1)';
+    }
+  }
+
+  validIdeas.forEach(item => {
+    const hasVotedThis = votedIdeas.includes(String(item.id));
+    const isVotingActive = settings.publicVotingActive !== false;
+    
+    let btnHtml = '';
+    if (hasVotedThis) {
+      btnHtml = `<button class="btn-vote voted" disabled><i class="fa-solid fa-circle-check"></i> הצבעת</button>`;
+    } else if (!isVotingActive) {
+      btnHtml = `<button class="btn-vote" disabled title="הצבעת הקהל נעולה"><i class="fa-solid fa-lock"></i> נעול</button>`;
+    } else if (votesCount >= 3) {
+      btnHtml = `<button class="btn-vote" disabled title="הגעת למגבלת 3 ההצבעות"><i class="fa-solid fa-ban"></i> הצבע בעד</button>`;
+    } else {
+      btnHtml = `<button class="btn-vote" onclick="handleVote(${item.id})"><i class="fa-solid fa-chevron-up"></i> הצבע בעד</button>`;
+    }
+
+    const card = document.createElement('div');
+    card.className = 'idea-card';
+    card.innerHTML = `
+      <div>
+        <div class="idea-card-header">
+          <div class="idea-card-title">${item.title}</div>
+          <div class="idea-card-votes"><i class="fa-solid fa-fire"></i> <span>${item.votes || 0}</span></div>
+        </div>
+        <div class="idea-card-desc">${item.problem}</div>
+      </div>
+      <div class="idea-card-footer">
+        <div class="idea-card-author">
+          <i class="fa-solid fa-users"></i> צוות: ${item.teammates}
+        </div>
+        ${btnHtml}
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+// לוגיקת הצבעה ציבורית
+window.handleVote = async (ideaId) => {
+  const votedIdeas = getVotedIdeas();
+  if (votedIdeas.length >= 3) {
+    showToast('ניתן להצביע לעד 3 רעיונות בלבד!', 'warning');
+    return;
+  }
+  
+  const result = await apiPost({
+    action: 'vote_idea',
+    ideaId: ideaId
+  });
+  
+  if (result.status === 'success') {
+    votedIdeas.push(String(ideaId));
+    localStorage.setItem('voted_ideas', JSON.stringify(votedIdeas));
+    showToast('הצבעתך נקלטה בהצלחה!');
+    loadPortalData(); // רענון מונים
+  } else {
+    showToast('שגיאה בהצבעה: ' + (result.message || 'אנא נסו שוב'), 'error');
+  }
+};
 
 // ==========================================
 // לוגיקת הצ'אטבוט (עוזר ה-AI האישי)
@@ -371,6 +479,16 @@ function initChatbotUI() {
   if (closeBtn) {
     closeBtn.addEventListener('click', () => {
       chatWindow.classList.remove('active');
+    });
+  }
+
+  const maxBtn = document.getElementById('chat-maximize-btn');
+  if (maxBtn) {
+    maxBtn.addEventListener('click', () => {
+      chatWindow.classList.toggle('maximized');
+      const isMax = chatWindow.classList.contains('maximized');
+      maxBtn.innerHTML = isMax ? '<i class="fa-solid fa-compress"></i>' : '<i class="fa-solid fa-expand"></i>';
+      maxBtn.title = isMax ? 'מזער חלון' : 'הגדל חלון';
     });
   }
 
@@ -543,28 +661,118 @@ function initJudgeUI() {
 }
 
 // הגדרת מעבר בין טאבים בשיפוט
+// הגדרת מעבר בין טאבים בשיפוט
 function initJudgeTabs() {
   const btnScreening = document.getElementById('tab-screening-btn');
   const btnFinals = document.getElementById('tab-finals-btn');
+  const btnSettings = document.getElementById('tab-settings-btn');
+  
   const panelScreening = document.getElementById('panel-screening');
   const panelFinals = document.getElementById('panel-finals');
+  const panelSettings = document.getElementById('panel-settings');
 
   if (btnScreening && btnFinals && panelScreening && panelFinals) {
     btnScreening.addEventListener('click', () => {
       btnScreening.classList.add('active');
       btnFinals.classList.remove('active');
+      if (btnSettings) btnSettings.classList.remove('active');
+      
       panelScreening.style.display = 'block';
       panelFinals.style.display = 'none';
+      if (panelSettings) panelSettings.style.display = 'none';
     });
 
     btnFinals.addEventListener('click', () => {
       btnFinals.classList.add('active');
       btnScreening.classList.remove('active');
+      if (btnSettings) btnSettings.classList.remove('active');
+      
       panelFinals.style.display = 'block';
       panelScreening.style.display = 'none';
+      if (panelSettings) panelSettings.style.display = 'none';
     });
+
+    if (btnSettings && panelSettings) {
+      btnSettings.addEventListener('click', () => {
+        btnSettings.classList.add('active');
+        btnScreening.classList.remove('active');
+        btnFinals.classList.remove('active');
+        
+        panelSettings.style.display = 'block';
+        panelScreening.style.display = 'none';
+        panelFinals.style.display = 'none';
+      });
+    }
   }
 }
+
+// עדכון כפתורי הגדרות הניהול
+function updateSettingsUI(settings) {
+  if (!settings) return;
+
+  // 1. כפתורי הצבעת קהל
+  const btnVotingEnable = document.getElementById('btn-voting-enable');
+  const btnVotingDisable = document.getElementById('btn-voting-disable');
+  if (btnVotingEnable && btnVotingDisable) {
+    if (settings.publicVotingActive !== false) {
+      btnVotingEnable.className = 'btn btn-primary';
+      btnVotingDisable.className = 'btn btn-secondary';
+      btnVotingDisable.style.color = '#ef4444';
+    } else {
+      btnVotingEnable.className = 'btn btn-secondary';
+      btnVotingDisable.className = 'btn btn-primary';
+      btnVotingDisable.style.color = '#fff';
+    }
+  }
+
+  // 2. כפתורי שיפוט שופטים
+  const btnJudgingEnable = document.getElementById('btn-judging-enable');
+  const btnJudgingDisable = document.getElementById('btn-judging-disable');
+  if (btnJudgingEnable && btnJudgingDisable) {
+    if (settings.judgingActive !== false) {
+      btnJudgingEnable.className = 'btn btn-primary';
+      btnJudgingDisable.className = 'btn btn-secondary';
+      btnJudgingDisable.style.color = '#ef4444';
+    } else {
+      btnJudgingEnable.className = 'btn btn-secondary';
+      btnJudgingDisable.className = 'btn btn-primary';
+      btnJudgingDisable.style.color = '#fff';
+    }
+  }
+
+  // 3. כפתורי פרסום תוצאות
+  const btnLeaderboardEnable = document.getElementById('btn-leaderboard-enable');
+  const btnLeaderboardDisable = document.getElementById('btn-leaderboard-disable');
+  if (btnLeaderboardEnable && btnLeaderboardDisable) {
+    if (settings.leaderboardPublic === true) {
+      btnLeaderboardEnable.className = 'btn btn-primary';
+      btnLeaderboardDisable.className = 'btn btn-secondary';
+    } else {
+      btnLeaderboardEnable.className = 'btn btn-secondary';
+      btnLeaderboardDisable.className = 'btn btn-primary';
+    }
+  }
+}
+
+// שינוי הגדרות ניהול מהפנל
+window.toggleSetting = async (key, val) => {
+  if (!currentPasscode) return;
+
+  const payload = {
+    action: 'update_system_settings',
+    passcode: currentPasscode
+  };
+  payload[key] = val;
+
+  const result = await apiPost(payload);
+  
+  if (result.status === 'success') {
+    showToast('ההגדרה עודכנה בהצלחה!');
+    updateSettingsUI(result.settings);
+  } else {
+    showToast('שגיאה בעדכון ההגדרה: ' + result.message, 'error');
+  }
+};
 
 // טעינת כל נתוני השיפוט (מצריך סיסמה מאומתת)
 async function loadJudgingData() {
@@ -584,6 +792,31 @@ async function loadJudgingData() {
 
     // רינדור שלב ב' - הגמר
     renderFinalsPanel();
+
+    // עדכון הגדרות ניהול
+    updateSettingsUI(result.settings);
+
+    // חישוב חביב הקהל
+    if (allIdeas.length > 0) {
+      let maxVotes = -1;
+      let winner = null;
+      allIdeas.forEach(idea => {
+        const v = Number(idea.votes) || 0;
+        if (v > maxVotes && idea.status !== 'deleted') {
+          maxVotes = v;
+          winner = idea;
+        }
+      });
+
+      const winnerTextEl = document.getElementById('public-winner-text');
+      if (winnerTextEl) {
+        if (winner && maxVotes > 0) {
+          winnerTextEl.innerHTML = `הפרויקט <strong>"${winner.title}"</strong> (של ${winner.teammates}) מוביל כעת עם <strong>${maxVotes}</strong> הצבעות מהקהל!`;
+        } else {
+          winnerTextEl.innerHTML = `אין עדיין הצבעות מהקהל לפרויקטים.`;
+        }
+      }
+    }
   } else {
     showToast('שגיאה במשיכת נתוני שיפוט: ' + result.message, 'error');
   }
