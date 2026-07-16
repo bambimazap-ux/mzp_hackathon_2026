@@ -12,7 +12,21 @@
   <div class="container fade-in">
     <!-- Header with unified banner -->
     <header class="main-header">
-      <img src="assets/header_banner.png" alt="החטיבה לזיהוי פלילי - מדור מחקר ופיתוח" class="header-banner-img">
+      <!-- Desktop Banner Image (Hidden on Mobile) -->
+      <img src="assets/header_banner.png" alt="החטיבה לזיהוי פלילי - מדור מחקר ופיתוח" class="header-banner-img desktop-only">
+      
+      <!-- Mobile Responsive HTML Header (Hidden on Desktop) -->
+      <div class="mobile-header-content mobile-only">
+        <div class="mobile-logo-row">
+          <img src="assets/לוגו מזפ.png" alt="לוגו מזפ" class="mobile-logo">
+          <div class="mobile-logo-separator"></div>
+          <img src="assets/לוגו מדור מופ.png" alt="לוגו מופ" class="mobile-logo">
+        </div>
+        <div class="mobile-title-col">
+          <div class="mobile-dept-text">מדור מחקר ופיתוח</div>
+          <div class="mobile-div-text">החטיבה לזיהוי פלילי</div>
+        </div>
+      </div>
     </header>
 
     <!-- Hero Banner -->
@@ -63,7 +77,7 @@
     </section>
 
     <!-- Interactive Roadmap / Timeline -->
-    <section class="glass-card">
+    <section class="glass-card" id="timeline-section">
       <div class="section-header">
         <h2 class="section-title">ציר הזמן של ההאקתון</h2>
       </div>
@@ -169,7 +183,7 @@
     </section>
 
     <!-- Teammates Board -->
-    <section class="glass-card">
+    <section class="glass-card" id="teammates-section">
       <div class="section-header">
         <h2 class="section-title">לוח גיוס שותפים ("דרושים לצוות")</h2>
         <button class="btn btn-accent" id="open-recruit-btn-2">
@@ -293,6 +307,30 @@
         </button>
       </form>
     </div>
+  </div>
+
+  <!-- MOBILE BOTTOM NAVIGATION BAR -->
+  <div class="mobile-bottom-nav">
+    <a href="#" class="nav-item active" id="nav-item-home" onclick="window.scrollTo({top:0, behavior:'smooth'}); return false;">
+      <i class="fa-solid fa-house"></i>
+      <span>בית</span>
+    </a>
+    <a href="#timeline-section" class="nav-item" id="nav-item-timeline">
+      <i class="fa-solid fa-route"></i>
+      <span>ציר זמן</span>
+    </a>
+    <a href="#public-ideas-section" class="nav-item" id="nav-item-voting">
+      <i class="fa-solid fa-check-to-slot"></i>
+      <span>הצבעות</span>
+    </a>
+    <a href="#teammates-section" class="nav-item" id="nav-item-teammates">
+      <i class="fa-solid fa-user-plus"></i>
+      <span>שותפים</span>
+    </a>
+    <a href="#" class="nav-item" id="nav-item-chat" onclick="event.preventDefault(); document.getElementById('chat-toggle-btn').click();">
+      <i class="fa-solid fa-robot"></i>
+      <span>צ'אט AI</span>
+    </a>
   </div>
 
   <!-- TOAST NOTIFICATION CONTAINER -->

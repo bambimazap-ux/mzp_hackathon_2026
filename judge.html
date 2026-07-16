@@ -35,7 +35,21 @@
     <div id="judging-dashboard" style="display: none;">
       <!-- Header with unified banner -->
       <header class="main-header">
-        <img src="assets/judge_header_banner.png" alt="מערכת שיפוט פנימית - האקתון AI מז\"פ 2026" class="header-banner-img">
+        <!-- Desktop Banner Image (Hidden on Mobile) -->
+        <img src="assets/judge_header_banner.png" alt="מערכת שיפוט פנימית - האקתון AI מז\"פ 2026" class="header-banner-img desktop-only">
+        
+        <!-- Mobile Responsive HTML Header (Hidden on Desktop) -->
+        <div class="mobile-header-content mobile-only">
+          <div class="mobile-logo-row">
+            <img src="assets/לוגו מזפ.png" alt="לוגו מזפ" class="mobile-logo">
+            <div class="mobile-logo-separator"></div>
+            <img src="assets/לוגו מדור מופ.png" alt="לוגו מופ" class="mobile-logo">
+          </div>
+          <div class="mobile-title-col">
+            <div class="mobile-dept-text">מערכת שיפוט פנימית</div>
+            <div class="mobile-div-text">האקתון AI מז"פ 2026</div>
+          </div>
+        </div>
       </header>
 
       <!-- Tabs Navigation -->

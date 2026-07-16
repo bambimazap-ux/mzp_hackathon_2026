@@ -693,6 +693,7 @@ function initChatbotUI() {
 let currentPasscode = '';
 let allIdeas = [];
 let allScores = [];
+let currentSettings = {};
 
 function initJudgeUI() {
   const verifyBtn = document.getElementById('verify-passcode-btn');
@@ -825,6 +826,7 @@ function initJudgeTabs() {
 // עדכון כפתורי הגדרות הניהול
 function updateSettingsUI(settings) {
   if (!settings) return;
+  currentSettings = settings;
 
   // 1. כפתורי הצבעת קהל
   const btnVotingEnable = document.getElementById('btn-voting-enable');
@@ -1163,6 +1165,11 @@ function getScoreBadgeClass(val) {
 
 // פתיחת מודאל הזנת ציון פרויקט
 window.openScoreModal = function(id, title, stage) {
+  if (currentSettings && currentSettings.judgingActive === false) {
+    showToast('השיפוט נעול כעת על ידי מנהלי ההאקתון!', 'warning');
+    return;
+  }
+
   const modal = document.getElementById('score-modal');
   const inputId = document.getElementById('score-project-id');
   const inputTitle = document.getElementById('score-modal-project-title');
