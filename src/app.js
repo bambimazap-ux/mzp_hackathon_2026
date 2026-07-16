@@ -42,12 +42,16 @@ async function apiGet(params = {}) {
   }
 }
 
-// פונקציה לשליחת בקשות POST בטוחות (Simple Requests) למניעת בעיות CORS
+// פונקציה לשליחת בקשות POST בטוחות (Simple Requests) למניעת בעיות CORS עם מנגנון Timeout
 async function apiPost(payload = {}) {
   if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_SCRIPT_WEB_APP_URL_HERE') {
     showToast('שגיאה: כתובת ה-API של גוגל אינה מוגדרת ב-config.js', 'error');
     return { status: 'error', message: 'כתובת ה-API אינה מוגדרת' };
   }
+
+  // הגדרת Timeout של 15 שניות למניעת תקיעות ונעילה אינסופית
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
 
   try {
     // שליחה בפורמט text/plain היא "Simple Request" ואינה דורשת OPTIONS Preflight
@@ -57,15 +61,22 @@ async function apiPost(payload = {}) {
       headers: {
         'Content-Type': 'text/plain' 
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      signal: controller.signal
     });
+    
+    clearTimeout(timeoutId);
     
     // בגלל השימוש ב-cors, גוגל מפנה אותנו לכתובת script.googleusercontent.com
     // הדפדפן עוקב אחר ההפניה ומחזיר את התוצאה
     const data = await response.json();
     return data;
   } catch (error) {
+    clearTimeout(timeoutId);
     console.error('API POST Error:', error);
+    if (error.name === 'AbortError') {
+      return { status: 'error', message: 'שגיאת תקשורת: שרת האפליקציה לא הגיב תוך 15 שניות' };
+    }
     return { status: 'error', message: error.message };
   }
 }
@@ -509,9 +520,9 @@ function initChatbotUI() {
       parts: [{ text: text }]
     });
 
-    // שמירה על 10 הודעות אחרונות בלבד כדי למנוע חריגה בכמות טוקנים
-    if (chatHistory.length > 10) {
-      chatHistory = chatHistory.slice(-10);
+    // שמירה על הודעות אחרונות בלבד תוך שמירה על כך שההודעה הראשונה היא תמיד של המשתמש (user)
+    while (chatHistory.length > 10 || (chatHistory.length > 0 && chatHistory[0].role === 'model')) {
+      chatHistory.shift();
     }
 
     // יצירת מפתח המתנה (Spinner) של הבוט
@@ -533,15 +544,19 @@ function initChatbotUI() {
 
       if (result.status === 'success' && result.reply) {
         appendMessage(result.reply, 'bot');
-        // הוספת תשובת הבוט להיסטוריית השיחה
-        chatHistory.push({
-          role: 'model',
-          parts: [{ text: result.reply }]
-        });
+        if (result.isError) {
+          chatHistory.pop(); // נסיר את ההודעה האחרונה של המשתמש כדי לא לזהם את ההיסטוריה בשגיאות
+        } else {
+          // הוספת תשובת הבוט להיסטוריית השיחה
+          chatHistory.push({
+            role: 'model',
+            parts: [{ text: result.reply }]
+          });
+        }
       } else {
         // שגיאה או חריגה במגבלת קצב
         const detail = result.message ? `\n(פרטי שגיאה מהשרת: ${result.message})` : '';
-        appendMessage('מצטער, סוכן ה-AI עמוס כרגע או שקיים קושי בחיבור. אל דאגה - ניתן להירשם או להעלות שותפים ישירות באמצעות הטפסים הסטנדרטיים באתר!' + detail, 'bot');
+        appendMessage('מצטער, נראה שישנו קושי זמני בחיבור לסוכן ה-AI. אל דאגה - ניתן להירשם להאקתון, להגיש רעיון או לפרסם מודעת גיוס שותפים ישירות באמצעות הטפסים הרגילים באתר בכל עת!' + detail, 'bot');
         chatHistory.pop(); // נסיר את ההודעה שלא קיבלה מענה מההיסטוריה
       }
     } catch (e) {
@@ -563,11 +578,34 @@ function initChatbotUI() {
     }
   });
 
+  // עיבוד Markdown בסיסי לעברית (הדגשה ורשימות בולטים)
+  function formatMarkdown(text) {
+    let formatted = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    // הדגשה: **טקסט** -> <strong>טקסט</strong>
+    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+    // רשימת בולטים (שורות המתחילות ב-* או - או •)
+    formatted = formatted.split('\n').map(line => {
+      const trimmed = line.trim();
+      if (trimmed.startsWith('* ') || trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
+        return `<li style="margin-right: 1.2rem; list-style-type: disc;">${trimmed.substring(2)}</li>`;
+      }
+      return line;
+    }).join('\n');
+
+    // מעברי שורה
+    formatted = formatted.replace(/\n/g, '<br>');
+    return formatted;
+  }
+
   function appendMessage(text, sender) {
     const msg = document.createElement('div');
     msg.className = `chat-msg chat-msg-${sender}`;
-    // המרת ירידות שורה ל-<br>
-    msg.innerHTML = text.replace(/\n/g, '<br>');
+    msg.innerHTML = formatMarkdown(text);
     messagesContainer.appendChild(msg);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
   }

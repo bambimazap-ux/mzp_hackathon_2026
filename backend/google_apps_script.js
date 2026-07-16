@@ -347,19 +347,21 @@ function handleGeminiChat(history) {
   if (!apiKey) {
     return {
       status: "success",
-      reply: "סוכן ה-AI האישי אינו מחובר כרגע (חסר מפתח API של Gemini בהגדרות Apps Script).\n\nאל דאגה, תוכל להירשם או לחפש שותפים ישירות באמצעות הטפסים הסטנדרטיים באתר!"
+      reply: "⚠️ סוכן ה-AI האישי אינו מחובר כרגע (חסר מפתח API של Gemini בהגדרות Apps Script).\n\nאל דאגה! תוכלו להירשם להאקתון, להציע רעיונות ולחפש שותפים ישירות באמצעות הטפסים הסטנדרטיים באתר.",
+      isError: true
     };
   }
 
   // הגדרת הנחיות מנחות לבוט (System Instructions) המעוגנות בתוכן ההאקתון
   var systemInstruction = 
-    "אתה סוכן ה-AI האישי של האקתון מז\"פ 2026. עליך לענות תמיד **במשפט אחד או שניים קצרים בלבד (עד 35 מילים במצטבר)**. " +
-    "התשובה חייבת להיות מלאה, קצרה ותמציתית ביותר, ואסור לה להקטע. אל תכתוב פסקאות ואל תרחיב כלל.\n" +
-    "חוקי ההאקתון:\n" +
-    "- פיתוח ללא קוד (Vibe Coding) באמצעות פרומפטים ברשת בלמ\"ס אזרחית (עם נתוני דמה בלבד!).\n" +
-    "- צוותים של עד 3 שותפים. פרס: פגרת מפקד ותעודה.\n" +
-    "- שבוע 1 הרשמה, שבוע 2 סינון 3 עולים, שבוע 3 יום ההאקתון.\n" +
-    "אם מישהו מבקש עזרה ברעיון, נסח לו את הבעיה והפתרון ב-2 שורות קצרות בלבד.";
+    "אתה סוכן ה-AI האישי של האקתון מז\"פ 2026. עליך לענות תמיד בעברית שוטפת ומנומסת. " +
+    "תשובותיך חייבות להיות קצרות ותמציתיות ביותר - משפט אחד או שניים בלבד (עד 35-40 מילים במצטבר). " +
+    "חשוב מאוד: סיים תמיד את התשובה בצורה מלאה ומקצועית, ואסור לה להיקטע באמצע מילה או משפט! אל תתחיל לפרט רשימות ארוכות שעלולות להיקטע.\n\n" +
+    "חוקי ופרטי ההאקתון:\n" +
+    "- פיתוח ללא קוד (Vibe Coding) באמצעות כלי AI ופרומפטים ברשת בלמ\"ס אזרחית בלבד (חל איסור על שימוש במידע מסווג או אמיתי, רק נתוני דמה!).\n" +
+    "- צוותים של עד 3 שותפים. הפרס: פגרת מפקד ותעודת הערכה.\n" +
+    "- לוח זמנים: שבוע 1 הרשמה וסיעור מוחות, שבוע 2 סינון ועליה של 3 עולים לגמר, שבוע 3 יום ההאקתון הגדול.\n" +
+    "אם מישהו מבקש עזרה ברעיון, נסח לו את הבעיה והפתרון בצורה ברורה ב-2 שורות קצרות וקולעות בלבד.";
 
   var url = "https://generativelanguage.googleapis.com/v1beta/models/" + GEMINI_MODEL + ":generateContent?key=" + apiKey;
 
@@ -371,7 +373,7 @@ function handleGeminiChat(history) {
     },
     generationConfig: {
       temperature: 0.2,
-      maxOutputTokens: 600
+      maxOutputTokens: 1024 // הגדלת מגבלת הטוקנים למניעת קטיעה פיזית
     }
   };
 
@@ -386,18 +388,43 @@ function handleGeminiChat(history) {
     var response = UrlFetchApp.fetch(url, options);
     var responseCode = response.getResponseCode();
     var responseText = response.getContentText();
-    var json = JSON.parse(responseText);
+    
+    var json;
+    try {
+      json = JSON.parse(responseText);
+    } catch (e) {
+      json = {};
+    }
 
     if (responseCode === 200 && json.candidates && json.candidates[0].content.parts[0].text) {
       var botReply = json.candidates[0].content.parts[0].text;
       return { status: "success", reply: botReply };
     } else {
       Logger.log("Gemini API Error: " + responseText);
-      return { status: "error", message: "Gemini API error (Status " + responseCode + ")" };
+      
+      var friendlyReply = "";
+      if (responseCode === 429) {
+        friendlyReply = "⚠️ סוכן ה-AI עמוס כרגע (שגיאה 429 - מגבלת קצב). אנא המתינו מספר שניות ונסו לשלוח שוב. בינתיים, הטפסים והרישומים באתר זמינים כרגיל!";
+      } else if (responseCode === 400 || responseCode === 403) {
+        friendlyReply = "🔑 מפתח ה-API של Gemini אינו תקין או פג תוקף (שגיאה " + responseCode + "). אנא פנו למנהל המערכת לעדכון ה-GEMINI_API_KEY ב-Script Properties.";
+      } else if (responseCode === 503) {
+        friendlyReply = "☁️ שרתי ה-AI של Gemini אינם זמינים זמנית (שגיאה 503). נסו שוב בעוד דקה. המערכת עצמה פעילה ותוכלו להשתמש בטפסים להגשת רעיונות.";
+      } else {
+        friendlyReply = "שגיאה בחיבור ל-Gemini API (סטטוס " + responseCode + "). ניתן להמשיך להשתמש בטפסים ובממשקי האתר כרגיל.";
+      }
+      
+      return { status: "success", reply: friendlyReply, isError: true };
     }
   } catch (error) {
     Logger.log("UrlFetch Error: " + error.toString());
-    return { status: "error", message: error.toString() };
+    var errorStr = error.toString();
+    var friendlyReply = "מצטער, חלה שגיאת תקשורת בחיבור לשרת ה-AI. ניתן להירשם ולעבוד כרגיל ישירות דרך הטפסים באתר.";
+    if (errorStr.indexOf("429") !== -1) {
+      friendlyReply = "⚠️ עומס פניות זמני (שגיאה 429). אנא נסו שוב בעוד מספר שניות.";
+    } else if (errorStr.indexOf("503") !== -1) {
+      friendlyReply = "☁️ שירות ה-AI אינו זמין זמנית (שגיאה 503). אנא נסו שוב מאוחר יותר.";
+    }
+    return { status: "success", reply: friendlyReply, isError: true };
   }
 }
 
