@@ -74,7 +74,7 @@ function doPost(e) {
     } else if (action === "update_system_settings") {
       response = updateSystemSettings(payload);
     } else if (action === "gemini_chat") {
-      response = handleGeminiChat(payload.message);
+      response = handleGeminiChat(payload.history);
     } else {
       response = { status: "error", message: "Action not supported" };
     }
@@ -339,7 +339,7 @@ function submitScore(payload) {
 // ==========================================
 // 4. תיווך ל-Gemini API (Proxy מאובטח)
 // ==========================================
-function handleGeminiChat(userMessage) {
+function handleGeminiChat(history) {
   var props = PropertiesService.getScriptProperties();
   var apiKey = props.getProperty("GEMINI_API_KEY");
 
@@ -365,18 +365,13 @@ function handleGeminiChat(userMessage) {
 
   // הכנת גוף הבקשה ל-Gemini API v1beta
   var payload = {
-    contents: [
-      {
-        role: "user",
-        parts: [{ text: userMessage }]
-      }
-    ],
+    contents: history || [],
     systemInstruction: {
       parts: [{ text: systemInstruction }]
     },
     generationConfig: {
       temperature: 0.2,
-      maxOutputTokens: 400
+      maxOutputTokens: 600
     }
   };
 

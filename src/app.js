@@ -468,6 +468,8 @@ function initChatbotUI() {
 
   if (!toggleBtn || !chatWindow) return;
 
+  let chatHistory = [];
+
   // פתיחה/סגירה
   toggleBtn.addEventListener('click', () => {
     chatWindow.classList.toggle('active');
@@ -501,18 +503,29 @@ function initChatbotUI() {
     appendMessage(text, 'user');
     chatInput.value = '';
 
+    // הוספת ההודעה להיסטוריית השיחה
+    chatHistory.push({
+      role: 'user',
+      parts: [{ text: text }]
+    });
+
+    // שמירה על 10 הודעות אחרונות בלבד כדי למנוע חריגה בכמות טוקנים
+    if (chatHistory.length > 10) {
+      chatHistory = chatHistory.slice(-10);
+    }
+
     // יצירת מפתח המתנה (Spinner) של הבוט
     const loadingId = appendLoadingMessage();
 
-    // חסימת כפתור השליחה ל-5 שניות לצורך מניעת ספאם (Throttling)
+    // חסימת כפתור השליחה בזמן טעינה
     sendBtn.disabled = true;
     chatInput.disabled = true;
 
     try {
-      // קריאת API ל-Apps Script שמתווך ל-Gemini API באופן מאובטח
+      // קריאת API ל-Apps Script שמתווך ל-Gemini API באופן מאובטח עם ההיסטוריה המלאה
       const result = await apiPost({
         action: 'gemini_chat',
-        message: text
+        history: chatHistory
       });
 
       // הסרת ה-Spinner
@@ -520,21 +533,26 @@ function initChatbotUI() {
 
       if (result.status === 'success' && result.reply) {
         appendMessage(result.reply, 'bot');
+        // הוספת תשובת הבוט להיסטוריית השיחה
+        chatHistory.push({
+          role: 'model',
+          parts: [{ text: result.reply }]
+        });
       } else {
         // שגיאה או חריגה במגבלת קצב
         const detail = result.message ? `\n(פרטי שגיאה מהשרת: ${result.message})` : '';
         appendMessage('מצטער, סוכן ה-AI עמוס כרגע או שקיים קושי בחיבור. אל דאגה - ניתן להירשם או להעלות שותפים ישירות באמצעות הטפסים הסטנדרטיים באתר!' + detail, 'bot');
+        chatHistory.pop(); // נסיר את ההודעה שלא קיבלה מענה מההיסטוריה
       }
     } catch (e) {
       removeLoadingMessage(loadingId);
       appendMessage('מצטער, חלה שגיאה בחיבור לסוכן ה-AI.\n(פרטי שגיאה: ' + e.message + ')', 'bot');
+      chatHistory.pop();
     } finally {
-      // הפעלת מנגנון השהיית כפתור
-      setTimeout(() => {
-        sendBtn.disabled = false;
-        chatInput.disabled = false;
-        chatInput.focus();
-      }, 5000); // 5 שניות הגבלת קצב
+      // שחרור מיידי של כפתורי ההקלדה למענה רציף ומהיר
+      sendBtn.disabled = false;
+      chatInput.disabled = false;
+      chatInput.focus();
     }
   };
 
