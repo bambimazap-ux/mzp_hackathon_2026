@@ -733,6 +733,31 @@ textarea.form-control {
   color: var(--text-primary);
   align-self: flex-start;
   border-bottom-right-radius: 2px;
+  position: relative;
+  padding-left: 2.5rem;
+}
+
+.chat-msg-copy-btn {
+  position: absolute;
+  left: 0.6rem;
+  top: 0.6rem;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease, transform 0.2s ease;
+  opacity: 0.6;
+}
+
+.chat-msg-copy-btn:hover {
+  color: var(--accent-cyan);
+  transform: scale(1.15);
+  opacity: 1;
 }
 
 .chat-msg-user {

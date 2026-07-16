@@ -505,6 +505,19 @@ function initChatbotUI() {
     });
   }
 
+  const clearBtn = document.getElementById('chat-clear-btn');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      const firstMsg = messagesContainer.querySelector('.chat-msg-bot');
+      messagesContainer.innerHTML = '';
+      if (firstMsg) {
+        messagesContainer.appendChild(firstMsg);
+      }
+      chatHistory = [];
+      showToast('השיחה אותחלה בהצלחה!');
+    });
+  }
+
   // שליחת הודעה
   const handleSendMessage = async () => {
     const text = chatInput.value.trim();
@@ -605,7 +618,33 @@ function initChatbotUI() {
   function appendMessage(text, sender) {
     const msg = document.createElement('div');
     msg.className = `chat-msg chat-msg-${sender}`;
-    msg.innerHTML = formatMarkdown(text);
+    
+    if (sender === 'bot') {
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'chat-msg-copy-btn';
+      copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i>';
+      copyBtn.title = 'העתק תשובה';
+      copyBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(text).then(() => {
+          copyBtn.innerHTML = '<i class="fa-solid fa-check" style="color: var(--accent-neon);"></i>';
+          showToast('הטקסט הועתק ללוח!');
+          setTimeout(() => {
+            copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i>';
+          }, 2000);
+        }).catch(err => {
+          console.error('Copy failed:', err);
+        });
+      });
+      msg.appendChild(copyBtn);
+      
+      const contentSpan = document.createElement('span');
+      contentSpan.innerHTML = formatMarkdown(text);
+      msg.appendChild(contentSpan);
+    } else {
+      msg.innerHTML = formatMarkdown(text);
+    }
+    
     messagesContainer.appendChild(msg);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
   }
@@ -624,6 +663,27 @@ function initChatbotUI() {
   function removeLoadingMessage(id) {
     const el = document.getElementById(id);
     if (el) el.remove();
+  }
+
+  // הוספת כפתור העתקה להודעה הראשונה (הסטטית) שב-HTML
+  const initialBotMsg = messagesContainer.querySelector('.chat-msg-bot');
+  if (initialBotMsg) {
+    const rawText = initialBotMsg.innerText.trim();
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'chat-msg-copy-btn';
+    copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i>';
+    copyBtn.title = 'העתק תשובה';
+    copyBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      navigator.clipboard.writeText(rawText).then(() => {
+        copyBtn.innerHTML = '<i class="fa-solid fa-check" style="color: var(--accent-neon);"></i>';
+        showToast('הטקסט הועתק ללוח!');
+        setTimeout(() => {
+          copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i>';
+        }, 2000);
+      });
+    });
+    initialBotMsg.appendChild(copyBtn);
   }
 }
 
