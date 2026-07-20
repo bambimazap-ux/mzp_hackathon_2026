@@ -17,12 +17,12 @@ const HACKATHON_DAY = new Date('2026-09-10'); // Thursday
 // Schedule configuration (already defined above)
 function getCurrentPhase() {
   const now = new Date();
-  if (now < HACKATHON_START) return 'REGISTRATION';
+  if (now < HACKATHON_START) return 'SAVE_THE_DATE';
   if (now >= HACKATHON_START && now <= REGISTRATION_END) return 'REGISTRATION';
-  if (now > REGISTRATION_END && now < VOTING_START) return 'PREP';
+  if (now > REGISTRATION_END && now < VOTING_START) return 'POST_REGISTRATION';
   if (now >= VOTING_START && now <= VOTING_END) return 'VOTING';
-  if (now > VOTING_END && now < HACKATHON_DAY) return 'PREP';
-  if (now >= HACKATHON_DAY) return 'HACKATHON';
+  if (now > VOTING_END && now < HACKATHON_DAY) return 'PREPARATION';
+  if (now >= HACKATHON_DAY) return 'HACKATHON_DAY';
   return 'FINISHED';
 }
 // expose globals for other scripts
