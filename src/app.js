@@ -236,6 +236,24 @@ function initPortalUI() {
   }
 
   // טעינת נתונים ראשונית
+function setTimelineDates() {
+  const formatDate = (date) => {
+    const pad = (n) => n.toString().padStart(2, '0');
+    return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()}`;
+  };
+  const regStartEl = document.getElementById('tl-reg-start');
+  const regEndEl = document.getElementById('tl-reg-end');
+  const voteStartEl = document.getElementById('tl-vote-start');
+  const voteEndEl = document.getElementById('tl-vote-end');
+  const hackDateEl = document.getElementById('tl-hackathon-date');
+  if (regStartEl) regStartEl.textContent = formatDate(window.HACKATHON_START);
+  if (regEndEl) regEndEl.textContent = formatDate(window.REGISTRATION_END);
+  if (voteStartEl) voteStartEl.textContent = formatDate(window.VOTING_START);
+  if (voteEndEl) voteEndEl.textContent = formatDate(window.VOTING_END);
+  if (hackDateEl) hackDateEl.textContent = formatDate(window.HACKATHON_DAY);
+}
+// טעינת נתונים ראשונית
+  setTimelineDates();
   loadPortalData();
 }
 
@@ -250,6 +268,13 @@ async function loadPortalData() {
 
     // 2. עדכון לוח הרעיונות והצבעות הקהל
     const settings = result.settings || {};
+    
+    // התאמת הגדרות הצבעה בהתאם לשלב האוטומטי
+    const phase = getCurrentPhase();
+    if (phase !== 'VOTING' && phase !== 'PREPARATION') {
+      settings.publicVotingActive = false;
+    }
+    
     renderPublicIdeas(result.ideas || [], settings);
 
     // 3. עדכון ציר הזמן והתוצרים (POC Showcase / גמר ההאקתון)
@@ -302,6 +327,9 @@ async function loadPortalData() {
     } else {
       if (pocSection) pocSection.style.display = 'none';
     }
+
+    // החלת לוגיקת השלבים והממשק הדינמית בהתאם ללוח הזמנים
+    applySchedulePhaseLogic(result);
   } else {
     // שגיאה בטעינת נתונים
     const teammateContainer = document.getElementById('teammate-container');
@@ -508,12 +536,10 @@ function initChatbotUI() {
   const clearBtn = document.getElementById('chat-clear-btn');
   if (clearBtn) {
     clearBtn.addEventListener('click', () => {
-      const firstMsg = messagesContainer.querySelector('.chat-msg-bot');
       messagesContainer.innerHTML = '';
-      if (firstMsg) {
-        messagesContainer.appendChild(firstMsg);
-      }
       chatHistory = [];
+      const phase = getCurrentPhase();
+      updateChatbotWelcomeMessage(phase);
       showToast('השיחה אותחלה בהצלחה!');
     });
   }
@@ -1170,12 +1196,6 @@ window.openScoreModal = function(id, title, stage) {
     return;
   }
 
-  const modal = document.getElementById('score-modal');
-  const inputId = document.getElementById('score-project-id');
-  const inputTitle = document.getElementById('score-modal-project-title');
-  const inputStage = document.getElementById('score-modal-stage-title');
-  const inputStageName = document.getElementById('score-stage-name');
-
   if (modal && inputId && inputTitle && inputStage) {
     inputId.value = id;
     inputTitle.textContent = `הזנת ציון עבור: ${title}`;
@@ -1185,3 +1205,317 @@ window.openScoreModal = function(id, title, stage) {
     modal.classList.add('active');
   }
 };
+
+// ============================================================================
+// לוגיקה אוטומטית לניהול לוח זמנים (Save the Date, הרשמה, הצבעה, הכנה, יום האקתון)
+// ============================================================================
+
+
+
+
+
+function getChatbotWelcomeMessage(phase) {
+  switch (phase) {
+    case 'SAVE_THE_DATE':
+      return `שלום! אני סוכן ה-AI האישי של האקתון מז"פ 2026. 🤖
+      <br><br>
+      ההרשמה הרשמית והגשת הרעיונות ייפתחו ביום ראשון ה-09.08.2026. 
+      <br><br>
+      בינתיים, אני כאן כדי לעזור לכם:
+      <br>
+      • <b>לעשות סיעור מוחות מוקדם</b> על רעיונות ובעיות שניתן לפתור באמצעות AI במעבדות ובזירה.
+      <br>
+      • לחדד את האתגר שלכם ולגבש קונספט ראשוני, כך שכאשר ההרשמה תיפתח - יהיה לכם רעיון מושלם להגשה.
+      <br><br>
+      על איזה קושי או משימה ידנית הייתם רוצים להתגבר בעבודתכם? ספרו לי ונחשוב יחד!`;
+
+    case 'REGISTRATION':
+      return `שלום! ההרשמה להאקתון AI 2026 פתוחה כעת ועד ה-27.08.2026! 🚀
+      <br><br>
+      אני כאן כדי לעזור לכם:
+      <br>
+      • לנסח ולזקק את תיאור הבעיה והפתרון בצורה ברורה ומדויקת.
+      <br>
+      • לעזור לכם לבחור שם מושך לרעיון.
+      <br>
+      • לענות על כל שאלה לגבי כללי ההאקתון, השלבים ולוחות הזמנים.
+      <br><br>
+      איזה רעיון מעניין הייתם רוצים לפתח? ספרו לי עליו!`;
+
+    case 'VOTING':
+      return `שלום! שלב ההרשמה הסתיים, ושבוע הצבעת הקהל פתוח כעת (עד ה-03.09.2026)! 🗳️
+      <br><br>
+      אני כאן כדי לעזור לכם:
+      <br>
+      • להבין את הרעיונות השונים שהוגשו על ידי שוטרי החטיבה.
+      <br>
+      • לעשות סיעור מוחות על איך ניתן לקחת את הרעיונות הללו לשלב הבא.
+      <br><br>
+      באיזה נושא או רעיון תרצו לדון היום?`;
+
+    case 'PREPARATION':
+      return `שלום! שלב הצבעת הקהל הסתיים ו-3 הפרויקטים המובילים הוכרזו! 🏆
+      <br><br>
+      הצוותים שעלו לגמר נמצאים כעת בעיצומה של תקופת ההיערכות וההכנות לקראת יום ההאקתון הגדול בבית המורשת (10.9).
+      <br><br>
+      אני זמין כאן עבורכם לשאלות, הכנות טכנולוגיות, או תכנון ה-Prompts למיזמים השונים. במה אוכל לעזור?`;
+
+    case 'HACKATHON_DAY':
+    default:
+      return `שלום! יום ההאקתון הגדול הגיע! הצוותים מפתחים כעת בבית מורשת משטרת ישראל. 💻🔥
+      <br><br>
+      אני כאן כדי לסייע לצוותים בכתיבת Prompts, פתרון בעיות וליטוש הרעיונות בזמן אמת. בהצלחה לכולם!`;
+  }
+}
+
+function updateChatbotWelcomeMessage(phase) {
+  const messagesContainer = document.getElementById('chat-messages');
+  if (!messagesContainer) return;
+  
+  let firstMsg = messagesContainer.querySelector('.chat-msg-bot');
+  if (!firstMsg) {
+    firstMsg = document.createElement('div');
+    firstMsg.className = 'chat-msg chat-msg-bot';
+    messagesContainer.insertBefore(firstMsg, messagesContainer.firstChild);
+  }
+  firstMsg.innerHTML = getChatbotWelcomeMessage(phase);
+}
+
+function applySchedulePhaseLogic(result) {
+  const settings = result.settings || {};
+  const ideas = result.ideas || [];
+  const phase = getCurrentPhase();
+  
+  // אלמנטים בדף
+  const submitIdeaBtn = document.getElementById('open-submit-idea-btn');
+  const recruitBtn = document.getElementById('open-recruit-btn');
+  const recruitBtn2 = document.getElementById('open-recruit-btn-2');
+  const publicIdeasSection = document.getElementById('public-ideas-section');
+  const teammatesSection = document.getElementById('teammates-section');
+  const pocSection = document.getElementById('poc-showcase-section');
+  
+  const step1 = document.getElementById('tl-step-1');
+  const step2 = document.getElementById('tl-step-2');
+  const step3 = document.getElementById('tl-step-3');
+  
+  const step1Badge = document.getElementById('tl-step-1-badge');
+  const step2Badge = document.getElementById('tl-step-2-badge');
+  const step3Badge = document.getElementById('tl-step-3-badge');
+
+  // איפוס קלאסים של ציר הזמן
+  if (step1) step1.classList.remove('active');
+  if (step2) step2.classList.remove('active');
+  if (step3) step3.classList.remove('active');
+
+  // עדכון הודעת פתיחה של צ'אט ה-AI
+  updateChatbotWelcomeMessage(phase);
+
+  const finalists = ideas.filter(idea => idea.status === 'נבחר להאקתון' || idea.status === 'זוכה');
+
+  switch (phase) {
+    case 'SAVE_THE_DATE':
+      if (submitIdeaBtn) {
+        submitIdeaBtn.disabled = true;
+        submitIdeaBtn.innerHTML = '<i class="fa-solid fa-lock"></i> ההרשמה תיפתח ב-9.8';
+      }
+      if (recruitBtn) {
+        recruitBtn.disabled = true;
+        recruitBtn.innerHTML = '<i class="fa-solid fa-lock"></i> לוח שותפים ייפתח ב-9.8';
+      }
+      if (recruitBtn2) {
+        recruitBtn2.disabled = true;
+        recruitBtn2.innerHTML = '<i class="fa-solid fa-lock"></i> ייפתח ב-9.8';
+      }
+      if (publicIdeasSection) publicIdeasSection.style.display = 'none';
+      if (teammatesSection) teammatesSection.style.display = 'none';
+      if (pocSection) pocSection.style.display = 'none';
+      
+      if (step1) {
+        step1.classList.add('active');
+        if (step1Badge) {
+          step1Badge.innerHTML = 'שלב 1 <span class="status active" style="background: rgba(234, 179, 8, 0.15); color: #eab308; border-color: rgba(234, 179, 8, 0.2);">בקרוב</span>';
+        }
+      }
+      break;
+
+    case 'REGISTRATION':
+      if (submitIdeaBtn) {
+        submitIdeaBtn.disabled = false;
+        submitIdeaBtn.innerHTML = '<i class="fa-solid fa-lightbulb"></i> יש לי רעיון! להגשת מועמדות';
+      }
+      if (recruitBtn) {
+        recruitBtn.disabled = false;
+        recruitBtn.innerHTML = '<i class="fa-solid fa-users"></i> אני לבד, מחפש שותפים לצוות';
+      }
+      if (recruitBtn2) {
+        recruitBtn2.disabled = false;
+        recruitBtn2.innerHTML = '<i class="fa-solid fa-user-plus"></i> הוסף מודעה משלך';
+      }
+      if (publicIdeasSection) publicIdeasSection.style.display = 'block';
+      if (teammatesSection) teammatesSection.style.display = 'block';
+      if (pocSection) pocSection.style.display = 'none';
+      
+      if (step1) {
+        step1.classList.add('active');
+        if (step1Badge) {
+          step1Badge.innerHTML = 'שלב 1 <span class="status active">פעיל כעת</span>';
+        }
+      }
+      break;
+
+    case 'POST_REGISTRATION':
+      if (submitIdeaBtn) {
+        submitIdeaBtn.disabled = true;
+        submitIdeaBtn.innerHTML = '<i class="fa-solid fa-lock"></i> ההרשמה הסתיימה';
+      }
+      if (recruitBtn) {
+        recruitBtn.disabled = true;
+        recruitBtn.innerHTML = '<i class="fa-solid fa-lock"></i> לוח שותפים סגור';
+      }
+      if (recruitBtn2) {
+        recruitBtn2.disabled = true;
+        recruitBtn2.innerHTML = '<i class="fa-solid fa-lock"></i> סגור';
+      }
+      if (publicIdeasSection) publicIdeasSection.style.display = 'block';
+      if (teammatesSection) teammatesSection.style.display = 'block';
+      if (pocSection) pocSection.style.display = 'none';
+      
+      if (step1) {
+        if (step1Badge) {
+          step1Badge.innerHTML = 'שלב 1 <span class="status active" style="background: rgba(255, 255, 255, 0.1); color: var(--text-secondary); border-color: rgba(255, 255, 255, 0.15);">הסתיים</span>';
+        }
+      }
+      if (step2) {
+        step2.classList.add('active');
+        if (step2Badge) {
+          step2Badge.innerHTML = 'שלב 2 <span class="status active" style="background: rgba(234, 179, 8, 0.15); color: #eab308; border-color: rgba(234, 179, 8, 0.2);">ההצבעה תיפתח ב-30.8</span>';
+        }
+      }
+      break;
+
+    case 'VOTING':
+      if (submitIdeaBtn) {
+        submitIdeaBtn.disabled = true;
+        submitIdeaBtn.innerHTML = '<i class="fa-solid fa-lock"></i> ההרשמה הסתיימה';
+      }
+      if (recruitBtn) {
+        recruitBtn.disabled = true;
+        recruitBtn.innerHTML = '<i class="fa-solid fa-lock"></i> לוח שותפים סגור';
+      }
+      if (recruitBtn2) {
+        recruitBtn2.disabled = true;
+        recruitBtn2.innerHTML = '<i class="fa-solid fa-lock"></i> סגור';
+      }
+      if (publicIdeasSection) publicIdeasSection.style.display = 'block';
+      if (teammatesSection) teammatesSection.style.display = 'block';
+      if (pocSection) pocSection.style.display = 'none';
+      
+      if (step1) {
+        if (step1Badge) {
+          step1Badge.innerHTML = 'שלב 1 <span class="status active" style="background: rgba(255, 255, 255, 0.1); color: var(--text-secondary); border-color: rgba(255, 255, 255, 0.15);">הסתיים</span>';
+        }
+      }
+      if (step2) {
+        step2.classList.add('active');
+        if (step2Badge) {
+          step2Badge.innerHTML = 'שלב 2 <span class="status active">הצבעת הקהל פעילה!</span>';
+        }
+      }
+      break;
+
+    case 'PREPARATION':
+      if (submitIdeaBtn) {
+        submitIdeaBtn.disabled = true;
+        submitIdeaBtn.innerHTML = '<i class="fa-solid fa-lock"></i> ההרשמה הסתיימה';
+      }
+      if (recruitBtn) {
+        recruitBtn.disabled = true;
+        recruitBtn.innerHTML = '<i class="fa-solid fa-lock"></i> לוח שותפים סגור';
+      }
+      if (recruitBtn2) {
+        recruitBtn2.disabled = true;
+        recruitBtn2.innerHTML = '<i class="fa-solid fa-lock"></i> סגור';
+      }
+      if (publicIdeasSection) {
+        publicIdeasSection.style.display = 'block';
+        const voteStatus = document.getElementById('user-vote-status');
+        if (voteStatus) {
+          voteStatus.innerHTML = 'ההצבעה ננעלה';
+          voteStatus.style.background = 'rgba(255, 255, 255, 0.05)';
+          voteStatus.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+          voteStatus.style.color = 'var(--text-secondary)';
+        }
+      }
+      if (teammatesSection) teammatesSection.style.display = 'none';
+      
+      if (finalists.length > 0) {
+        if (pocSection) {
+          pocSection.style.display = 'block';
+          const pocTitle = pocSection.querySelector('.section-title');
+          if (pocTitle) {
+            pocTitle.innerHTML = 'שלושת הפרויקטים שעלו לגמר ומכינים POC 🛠️';
+          }
+        }
+      } else {
+        if (pocSection) pocSection.style.display = 'none';
+      }
+      
+      if (step1) {
+        if (step1Badge) {
+          step1Badge.innerHTML = 'שלב 1 <span class="status active" style="background: rgba(255, 255, 255, 0.1); color: var(--text-secondary); border-color: rgba(255, 255, 255, 0.15);">הסתיים</span>';
+        }
+      }
+      if (step2) {
+        step2.classList.add('active');
+        if (step2Badge) {
+          step2Badge.innerHTML = 'שלב 2 <span class="status active" style="background: rgba(0, 245, 212, 0.15); color: var(--accent-cyan); border-color: rgba(0, 245, 212, 0.2);">היערכות והכנות לגמר</span>';
+        }
+      }
+      break;
+
+    case 'HACKATHON_DAY':
+    default:
+      if (submitIdeaBtn) {
+        submitIdeaBtn.disabled = true;
+        submitIdeaBtn.innerHTML = '<i class="fa-solid fa-lock"></i> ההרשמה הסתיימה';
+      }
+      if (recruitBtn) {
+        recruitBtn.disabled = true;
+        recruitBtn.innerHTML = '<i class="fa-solid fa-lock"></i> לוח שותפים סגור';
+      }
+      if (recruitBtn2) {
+        recruitBtn2.disabled = true;
+        recruitBtn2.innerHTML = '<i class="fa-solid fa-lock"></i> סגור';
+      }
+      if (teammatesSection) teammatesSection.style.display = 'none';
+      if (publicIdeasSection) publicIdeasSection.style.display = 'none';
+      
+      if (finalists.length > 0) {
+        if (pocSection) {
+          pocSection.style.display = 'block';
+          const pocTitle = pocSection.querySelector('.section-title');
+          if (pocTitle) {
+            pocTitle.innerHTML = 'התוצרים המובילים והזוכים 🏆';
+          }
+        }
+      }
+      
+      if (step1) {
+        if (step1Badge) {
+          step1Badge.innerHTML = 'שלב 1 <span class="status active" style="background: rgba(255, 255, 255, 0.1); color: var(--text-secondary); border-color: rgba(255, 255, 255, 0.15);">הסתיים</span>';
+        }
+      }
+      if (step2) {
+        if (step2Badge) {
+          step2Badge.innerHTML = 'שלב 2 <span class="status active" style="background: rgba(255, 255, 255, 0.1); color: var(--text-secondary); border-color: rgba(255, 255, 255, 0.15);">הסתיים</span>';
+        }
+      }
+      if (step3) {
+        step3.classList.add('active');
+        if (step3Badge) {
+          step3Badge.innerHTML = 'שלב 3 <span class="status active" style="background: rgba(57, 255, 20, 0.15); color: var(--accent-neon); border-color: rgba(57, 255, 20, 0.25);">היום הגדול!</span>';
+        }
+      }
+      break;
+  }
+}

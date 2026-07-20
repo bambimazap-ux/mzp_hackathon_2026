@@ -82,13 +82,13 @@
         <h2 class="section-title">ציר הזמן של ההאקתון</h2>
       </div>
       <div class="timeline">
-        <div class="timeline-item active" id="tl-step-1">
+        <div class="timeline-item" id="tl-step-1">
           <div class="timeline-badge"></div>
           <div class="timeline-content">
-            <div class="timeline-step">
-              שלב 1 <span class="status active">פעיל כעת</span>
+            <div class="timeline-step" id="tl-step-1-badge">
+              שלב 1 <span class="status active" id="tl-step-1-status">פעיל כעת</span>
             </div>
-            <h4 class="timeline-title">קול קורא והרשמה (שבוע 1)</h4>
+            <h4 class="timeline-title">קול קורא והרשמה (<span id="tl-reg-start"></span> - <span id="tl-reg-end"></span>)</h4>
             <p class="timeline-desc">מגבשים רעיון, מתאגדים בצוותים של עד 3 משתתפים, או מפרסמים מודעה בלוח השותפים כדי להשלים צוות ומגישים את הרעיון בפורטל.</p>
           </div>
         </div>
@@ -96,18 +96,18 @@
         <div class="timeline-item" id="tl-step-2">
           <div class="timeline-badge"></div>
           <div class="timeline-content">
-            <div class="timeline-step">שלב 2</div>
-            <h4 class="timeline-title">סינון ובחירת 3 פרויקטים מובילים (שבוע 2)</h4>
-            <p class="timeline-desc">ועדת השיפוט (סגל הפיקוד ומדור מו"פ) תבחן את הרעיונות בעזרת פורטל השופטים ותבחר את 3 ההצעות המבטיחות ביותר שיעלו להאקתון הגדול.</p>
+            <div class="timeline-step" id="tl-step-2-badge">שלב 2</div>
+            <h4 class="timeline-title">הצבעת הקהל והיערכות (<span id="tl-vote-start"></span> - <span id="tl-vote-end"></span>)</h4>
+            <p class="timeline-desc">הצבעת הקהל לכל הרעיונות שהוגשו (30.8 - 3.9), ולאחר מכן בחירת 3 הפרויקטים המובילים והיערכות ממוקדת של הצוותים (6.9 - 9.9) בליווי מנטור ממו"פ.</p>
           </div>
         </div>
 
         <div class="timeline-item" id="tl-step-3">
           <div class="timeline-badge"></div>
           <div class="timeline-content">
-            <div class="timeline-step">שלב 3</div>
-            <h4 class="timeline-title">יום ההאקתון הגדול והצגת התוצרים (שבוע 3)</h4>
-            <p class="timeline-desc">פיתוח מעשי של ה-POC בחדר בית מורשת בליווי מנטורינג של קצין מו"פ, ולאחר מכן הצגת התוצרים (Pitch) בפני סגל הפיקוד.</p>
+            <div class="timeline-step" id="tl-step-3-badge">שלב 3</div>
+            <h4 class="timeline-title">יום ההאקתון הגדול בבית מורשת (<span id="tl-hackathon-date"></span>)</h4>
+            <p class="timeline-desc">פיתוח מעשי של ה-POC בחדר בית מורשת משטרת ישראל בליווי מנטורינג של קצין מו"פ, ולאחר מכן הצגת התוצרים (Pitch) בפני סגל הפיקוד והכרזת הזוכים.</p>
           </div>
         </div>
       </div>
