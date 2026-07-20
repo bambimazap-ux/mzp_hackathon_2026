@@ -5,10 +5,10 @@ const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwmrm9QzQLITH
 
 // Schedule configuration
 const HACKATHON_START = new Date('2026-08-09'); // Sunday
-const REGISTRATION_END = new Date('2026-08-27'); // Saturday
-const VOTING_START = new Date('2026-08-30'); // Tuesday
-const VOTING_END = new Date('2026-09-09'); // Thursday
-const HACKATHON_DAY = new Date('2026-09-10'); // Saturday
+const REGISTRATION_END = new Date('2026-08-27'); // Thursday
+const VOTING_START = new Date('2026-08-30'); // Sunday
+const VOTING_END = new Date('2026-09-03'); // Thursday
+const HACKATHON_DAY = new Date('2026-09-10'); // Thursday
 
 /**
  * Returns the current phase of the hackathon schedule.
