@@ -238,19 +238,29 @@ function initPortalUI() {
   // טעינת נתונים ראשונית
 function setTimelineDates() {
   const formatDate = (date) => {
+    if (!date || !(date instanceof Date) || isNaN(date)) return 'TBD';
     const pad = (n) => n.toString().padStart(2, '0');
     return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()}`;
   };
+  
+  // נסה לשלוף מה-window (אם עודכן), ואם לא אז מהמשתנים הגלובליים
+  const hackStart = window.HACKATHON_START || (typeof HACKATHON_START !== 'undefined' ? HACKATHON_START : null);
+  const regEnd = window.REGISTRATION_END || (typeof REGISTRATION_END !== 'undefined' ? REGISTRATION_END : null);
+  const voteStart = window.VOTING_START || (typeof VOTING_START !== 'undefined' ? VOTING_START : null);
+  const voteEnd = window.VOTING_END || (typeof VOTING_END !== 'undefined' ? VOTING_END : null);
+  const hackDay = window.HACKATHON_DAY || (typeof HACKATHON_DAY !== 'undefined' ? HACKATHON_DAY : null);
+
   const regStartEl = document.getElementById('tl-reg-start');
   const regEndEl = document.getElementById('tl-reg-end');
   const voteStartEl = document.getElementById('tl-vote-start');
   const voteEndEl = document.getElementById('tl-vote-end');
   const hackDateEl = document.getElementById('tl-hackathon-date');
-  if (regStartEl) regStartEl.textContent = formatDate(window.HACKATHON_START);
-  if (regEndEl) regEndEl.textContent = formatDate(window.REGISTRATION_END);
-  if (voteStartEl) voteStartEl.textContent = formatDate(window.VOTING_START);
-  if (voteEndEl) voteEndEl.textContent = formatDate(window.VOTING_END);
-  if (hackDateEl) hackDateEl.textContent = formatDate(window.HACKATHON_DAY);
+  
+  if (regStartEl) regStartEl.textContent = formatDate(hackStart);
+  if (regEndEl) regEndEl.textContent = formatDate(regEnd);
+  if (voteStartEl) voteStartEl.textContent = formatDate(voteStart);
+  if (voteEndEl) voteEndEl.textContent = formatDate(voteEnd);
+  if (hackDateEl) hackDateEl.textContent = formatDate(hackDay);
 }
 // טעינת נתונים ראשונית
   setTimelineDates();
