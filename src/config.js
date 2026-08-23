@@ -4,7 +4,7 @@
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwmrm9QzQLITHYLzMEojQ9lgvgI73XDEhY9pIKpyIjZKILtHfBpBvMugEMTWltRYZCq/exec';
 
 // Schedule configuration
-const HACKATHON_START = new Date('2026-08-09'); // Sunday
+const HACKATHON_START = new Date('2026-08-23'); // Sunday
 const REGISTRATION_END = new Date('2026-08-27'); // Thursday
 const VOTING_START = new Date('2026-08-30'); // Sunday
 const VOTING_END = new Date('2026-09-03'); // Thursday
