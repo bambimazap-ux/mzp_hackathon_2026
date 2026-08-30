@@ -40,7 +40,7 @@
       border-right: 4px solid var(--error-color);
     }
     @media (max-width: 768px) {
-      .main-header { display: none; }
+      .main-header { flex-direction: column; gap: 1rem; }
     }
   </style>
 </head>
@@ -106,9 +106,10 @@
         </ul>
       </div>
 
-      <div style="text-align: center; margin-top: 3rem;">
-        <p style="margin-bottom: 1.5rem;"><strong>יש לכם רעיון אבל אין שותפים?</strong> כנסו ללוח המודעות בפורטל ההאקתון והשלימו צוות של עד 3 משתתפים.</p>
-        <a href="../index.html" class="btn btn-primary"><i class="fa-solid fa-house"></i> חזרה לפורטל הראשי</a>
+      <div style="text-align: center; margin-top: 3rem; background: rgba(0, 245, 212, 0.05); padding: 2rem; border-radius: 15px; border: 1px solid rgba(0, 245, 212, 0.2);">
+        <p style="margin-bottom: 1.5rem; font-size: 1.2rem;"><strong>מוכנים להוביל את מהפכת ה-AI?</strong></p>
+        <img src="../assets/qrcode.png" alt="QR Code" style="width: 150px; height: 150px; border-radius: 10px; border: 3px solid var(--accent-cyan); box-shadow: 0 0 15px rgba(0,245,212,0.3); display: inline-block;">
+        <p style="margin-top: 1rem; color: var(--accent-cyan); font-weight: bold; font-size: 1.1rem;">סרקו את הברקוד מכל טלפון משטרתי או פרטי להרשמה בפורטל</p>
       </div>
     </div>
   </div>

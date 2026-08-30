@@ -229,6 +229,17 @@ header::before {
   border: none;
 }
 
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: var(--text-secondary) !important;
+  box-shadow: none !important;
+}
+
+
 .btn-primary {
   background-color: var(--accent-cyan);
   color: var(--bg-color);
