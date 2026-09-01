@@ -468,7 +468,10 @@ function renderPublicIdeas(ideas = [], settings = {}) {
           <div class="idea-card-title">${item.title}</div>
           <div class="idea-card-votes"><i class="fa-solid fa-fire"></i> <span>${item.votes || 0}</span></div>
         </div>
-        <div class="idea-card-desc">${item.problem}</div>
+        <div class="idea-card-desc" id="desc-${item.id}">${item.problem}</div>
+        <button class="btn-read-more" id="readmore-${item.id}" onclick="toggleIdeaDesc(${item.id})">
+          <i class="fa-solid fa-chevron-down"></i> קרא עוד
+        </button>
       </div>
       <div class="idea-card-footer">
         <div class="idea-card-author">
@@ -480,6 +483,18 @@ function renderPublicIdeas(ideas = [], settings = {}) {
     container.appendChild(card);
   });
 }
+
+// פתיחה/סגירה של תיאור רעיון בכרטיסיית הצבעה
+window.toggleIdeaDesc = (ideaId) => {
+  const desc = document.getElementById(`desc-${ideaId}`);
+  const btn = document.getElementById(`readmore-${ideaId}`);
+  if (!desc || !btn) return;
+  const isExpanded = desc.classList.toggle('expanded');
+  btn.innerHTML = isExpanded
+    ? `<i class="fa-solid fa-chevron-up"></i> פחות`
+    : `<i class="fa-solid fa-chevron-down"></i> קרא עוד`;
+}
+
 
 // לוגיקת הצבעה ציבורית
 window.handleVote = async (ideaId) => {

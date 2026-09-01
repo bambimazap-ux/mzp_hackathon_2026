@@ -1140,8 +1140,40 @@ select option {
   font-size: 0.9rem;
   color: var(--text-secondary);
   line-height: 1.5;
-  margin-bottom: 1.5rem;
-  flex-grow: 1;
+  margin-bottom: 0.6rem;
+  /* Clamp to 3 lines by default */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+}
+
+.idea-card-desc.expanded {
+  display: block;
+  overflow: visible;
+  -webkit-line-clamp: unset;
+}
+
+.btn-read-more {
+  background: none;
+  border: none;
+  color: var(--accent-cyan);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0 0 0.8rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  opacity: 0.85;
+  transition: opacity 0.2s ease;
+  font-family: var(--font-sans);
+}
+
+.btn-read-more:hover {
+  opacity: 1;
+  text-decoration: underline;
 }
 
 .idea-card-footer {
