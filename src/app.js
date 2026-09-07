@@ -49,9 +49,9 @@ async function apiPost(payload = {}) {
     return { status: 'error', message: 'כתובת ה-API אינה מוגדרת' };
   }
 
-  // הגדרת Timeout של 15 שניות למניעת תקיעות ונעילה אינסופית
+  // הגדרת Timeout של 45 שניות למניעת תקיעות ומתן זמן מענה ל-Google Apps Script
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  const timeoutId = setTimeout(() => controller.abort(), 45000);
 
   try {
     // שליחה בפורמט text/plain היא "Simple Request" ואינה דורשת OPTIONS Preflight
@@ -75,7 +75,7 @@ async function apiPost(payload = {}) {
     clearTimeout(timeoutId);
     console.error('API POST Error:', error);
     if (error.name === 'AbortError') {
-      return { status: 'error', message: 'שגיאת תקשורת: שרת האפליקציה לא הגיב תוך 15 שניות' };
+      return { status: 'error', message: 'שגיאת תקשורת: שרת האפליקציה לא הגיב תוך 45 שניות (קיימת איטיות זמנית בגוגל)' };
     }
     return { status: 'error', message: error.message };
   }
