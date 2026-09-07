@@ -279,12 +279,6 @@ async function loadPortalData() {
     // 2. עדכון לוח הרעיונות והצבעות הקהל
     const settings = result.settings || {};
     
-    // התאמת הגדרות הצבעה בהתאם לשלב האוטומטי
-    const phase = getCurrentPhase();
-    if (phase !== 'VOTING' && phase !== 'PREPARATION') {
-      settings.publicVotingActive = false;
-    }
-    
     renderPublicIdeas(result.ideas || [], settings);
 
     // 3. עדכון ציר הזמן והתוצרים (POC Showcase / גמר ההאקתון)
@@ -1221,67 +1215,117 @@ function renderJudgingDashboard(data) {
 
 // שינוי הגדרות מערכת מהפנל (מנהל מערכת בלבד)
 window.toggleSetting = async (key, val) => {
-  if (!currentJudgeAuth.username || !currentJudgeAuth.password) return;
+  if (!currentJudgeAuth.username || !currentJudgeAuth.password) {
+    showToast('שגיאה: פרטי התחברות חסרים', 'error');
+    return;
+  }
 
-  showToast('מעדכן הגדרות מערכת...', 'success');
+  const allButtons = document.querySelectorAll('#panel-settings button');
+  allButtons.forEach(btn => {
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+    btn.style.cursor = 'wait';
+  });
+
+  showToast('מעדכן הגדרת מערכת מול השרת...', 'success');
 
   const payload = {
     action: 'update_system_settings',
     username: currentJudgeAuth.username,
-    password: currentJudgeAuth.password
+    password: currentJudgeAuth.password,
+    passcode: currentJudgeAuth.password // תמיכה לאחור בגרסאות Apps Script קודמות
   };
   payload[key] = val;
 
-  const result = await apiPost(payload);
+  try {
+    const result = await apiPost(payload);
 
-  if (result.status === 'success') {
-    showToast('ההגדרה עודכנה בהצלחה!', 'success');
-    updateSettingsUI(result.settings);
-  } else {
-    showToast('שגיאה בעדכון ההגדרה: ' + result.message, 'error');
+    if (result.status === 'success') {
+      showToast('ההגדרה עודכנה בהצלחה!', 'success');
+      if (result.settings) {
+        updateSettingsUI(result.settings);
+      }
+    } else {
+      showToast('שגיאה בעדכון ההגדרה: ' + (result.message || 'שגיאת הרשאות'), 'error');
+    }
+  } catch (err) {
+    showToast('שגיאת תקשורת בחיבור לשרת: ' + err.message, 'error');
+  } finally {
+    allButtons.forEach(btn => {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.style.cursor = 'pointer';
+    });
   }
 };
 
 function updateSettingsUI(settings) {
   if (!settings) return;
 
-  // 1. כפתורי הצבעת קהל
+  // 1. הצבעת קהל
   const btnVotingEnable = document.getElementById('btn-voting-enable');
   const btnVotingDisable = document.getElementById('btn-voting-disable');
+  const badgeVoting = document.getElementById('status-badge-voting');
+  const isVotingActive = settings.publicVotingActive !== false;
+
   if (btnVotingEnable && btnVotingDisable) {
-    if (settings.publicVotingActive !== false) {
-      btnVotingEnable.className = 'btn btn-primary';
-      btnVotingDisable.className = 'btn btn-secondary';
-    } else {
-      btnVotingEnable.className = 'btn btn-secondary';
-      btnVotingDisable.className = 'btn btn-primary';
-    }
+    btnVotingEnable.style.background = isVotingActive ? 'var(--accent-cyan)' : 'rgba(255,255,255,0.05)';
+    btnVotingEnable.style.color = isVotingActive ? 'var(--bg-color)' : 'var(--text-secondary)';
+    btnVotingEnable.style.borderColor = isVotingActive ? 'var(--accent-cyan)' : 'var(--panel-border)';
+
+    btnVotingDisable.style.background = !isVotingActive ? '#ef4444' : 'rgba(255,255,255,0.05)';
+    btnVotingDisable.style.color = !isVotingActive ? '#fff' : 'var(--text-secondary)';
+    btnVotingDisable.style.borderColor = !isVotingActive ? '#ef4444' : 'var(--panel-border)';
+  }
+  if (badgeVoting) {
+    badgeVoting.textContent = isVotingActive ? 'פעיל כעת' : 'נעול כעת';
+    badgeVoting.style.background = isVotingActive ? 'rgba(0,245,212,0.15)' : 'rgba(239,68,68,0.15)';
+    badgeVoting.style.color = isVotingActive ? 'var(--accent-cyan)' : '#ef4444';
+    badgeVoting.style.border = isVotingActive ? '1px solid rgba(0,245,212,0.3)' : '1px solid rgba(239,68,68,0.3)';
   }
 
-  // 2. כפתורי שיפוט שופטים
+  // 2. שיפוט שופטים
   const btnJudgingEnable = document.getElementById('btn-judging-enable');
   const btnJudgingDisable = document.getElementById('btn-judging-disable');
+  const badgeJudging = document.getElementById('status-badge-judging');
+  const isJudgingActive = settings.judgingActive !== false;
+
   if (btnJudgingEnable && btnJudgingDisable) {
-    if (settings.judgingActive !== false) {
-      btnJudgingEnable.className = 'btn btn-primary';
-      btnJudgingDisable.className = 'btn btn-secondary';
-    } else {
-      btnJudgingEnable.className = 'btn btn-secondary';
-      btnJudgingDisable.className = 'btn btn-primary';
-    }
+    btnJudgingEnable.style.background = isJudgingActive ? 'var(--accent-cyan)' : 'rgba(255,255,255,0.05)';
+    btnJudgingEnable.style.color = isJudgingActive ? 'var(--bg-color)' : 'var(--text-secondary)';
+    btnJudgingEnable.style.borderColor = isJudgingActive ? 'var(--accent-cyan)' : 'var(--panel-border)';
+
+    btnJudgingDisable.style.background = !isJudgingActive ? '#ef4444' : 'rgba(255,255,255,0.05)';
+    btnJudgingDisable.style.color = !isJudgingActive ? '#fff' : 'var(--text-secondary)';
+    btnJudgingDisable.style.borderColor = !isJudgingActive ? '#ef4444' : 'var(--panel-border)';
+  }
+  if (badgeJudging) {
+    badgeJudging.textContent = isJudgingActive ? 'פתוח לשיפוט' : 'שיפוט נעול';
+    badgeJudging.style.background = isJudgingActive ? 'rgba(0,245,212,0.15)' : 'rgba(239,68,68,0.15)';
+    badgeJudging.style.color = isJudgingActive ? 'var(--accent-cyan)' : '#ef4444';
+    badgeJudging.style.border = isJudgingActive ? '1px solid rgba(0,245,212,0.3)' : '1px solid rgba(239,68,68,0.3)';
   }
 
-  // 3. כפתורי פרסום תוצאות
+  // 3. חשיפת תוצאות
   const btnLeaderboardEnable = document.getElementById('btn-leaderboard-enable');
   const btnLeaderboardDisable = document.getElementById('btn-leaderboard-disable');
+  const badgeLeaderboard = document.getElementById('status-badge-leaderboard');
+  const isLeaderboardPublic = settings.leaderboardPublic === true;
+
   if (btnLeaderboardEnable && btnLeaderboardDisable) {
-    if (settings.leaderboardPublic === true) {
-      btnLeaderboardEnable.className = 'btn btn-primary';
-      btnLeaderboardDisable.className = 'btn btn-secondary';
-    } else {
-      btnLeaderboardEnable.className = 'btn btn-secondary';
-      btnLeaderboardDisable.className = 'btn btn-primary';
-    }
+    btnLeaderboardEnable.style.background = isLeaderboardPublic ? 'var(--accent-cyan)' : 'rgba(255,255,255,0.05)';
+    btnLeaderboardEnable.style.color = isLeaderboardPublic ? 'var(--bg-color)' : 'var(--text-secondary)';
+    btnLeaderboardEnable.style.borderColor = isLeaderboardPublic ? 'var(--accent-cyan)' : 'var(--panel-border)';
+
+    btnLeaderboardDisable.style.background = !isLeaderboardPublic ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)';
+    btnLeaderboardDisable.style.color = !isLeaderboardPublic ? '#fff' : 'var(--text-secondary)';
+    btnLeaderboardDisable.style.borderColor = !isLeaderboardPublic ? 'rgba(255,255,255,0.3)' : 'var(--panel-border)';
+  }
+  if (badgeLeaderboard) {
+    badgeLeaderboard.textContent = isLeaderboardPublic ? 'מפורסם לציבור' : 'מוסתר מהציבור';
+    badgeLeaderboard.style.background = isLeaderboardPublic ? 'rgba(57,255,20,0.15)' : 'rgba(255,255,255,0.08)';
+    badgeLeaderboard.style.color = isLeaderboardPublic ? 'var(--accent-neon)' : 'var(--text-secondary)';
+    badgeLeaderboard.style.border = isLeaderboardPublic ? '1px solid rgba(57,255,20,0.3)' : '1px solid rgba(255,255,255,0.15)';
   }
 }
 

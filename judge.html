@@ -234,14 +234,17 @@
             <!-- Toggle 1: Public Voting -->
             <div class="settings-card" style="background: rgba(255,255,255,0.02); border: 1px solid var(--panel-border); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
               <div>
-                <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;"><i class="fa-solid fa-users"></i> הצבעת הקהל (Upvotes)</h4>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+                  <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin: 0;"><i class="fa-solid fa-users"></i> הצבעת הקהל (Upvotes)</h4>
+                  <span id="status-badge-voting" style="font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: 600;">טוען...</span>
+                </div>
                 <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">שליטה האם שוטרים מחוץ לסגל הפיקוד יכולים להצביע עבור הרעיונות המועדפים עליהם באתר הציבורי.</p>
               </div>
               <div style="display: flex; gap: 0.5rem;">
-                <button class="btn btn-primary" id="btn-voting-enable" onclick="toggleSetting('publicVotingActive', true)">
+                <button class="btn btn-primary" id="btn-voting-enable" onclick="toggleSetting('publicVotingActive', true)" style="flex: 1;">
                   <i class="fa-solid fa-play"></i> הפעל הצבעות
                 </button>
-                <button class="btn btn-secondary" id="btn-voting-disable" onclick="toggleSetting('publicVotingActive', false)" style="border-color: rgba(239,68,68,0.3); color: #ef4444;">
+                <button class="btn btn-secondary" id="btn-voting-disable" onclick="toggleSetting('publicVotingActive', false)" style="flex: 1;">
                   <i class="fa-solid fa-pause"></i> נעל הצבעות
                 </button>
               </div>
@@ -250,14 +253,17 @@
             <!-- Toggle 2: Judging Status -->
             <div class="settings-card" style="background: rgba(255,255,255,0.02); border: 1px solid var(--panel-border); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
               <div>
-                <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;"><i class="fa-solid fa-gavel"></i> שיפוט השופטים (Scores)</h4>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+                  <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin: 0;"><i class="fa-solid fa-gavel"></i> שיפוט השופטים (Scores)</h4>
+                  <span id="status-badge-judging" style="font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: 600;">טוען...</span>
+                </div>
                 <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">נעילת שלב הזנת הציונים על ידי השופטים. כאשר השיפוט נעול, לא ניתן להזין או לשנות ציונים בטבלה.</p>
               </div>
               <div style="display: flex; gap: 0.5rem;">
-                <button class="btn btn-primary" id="btn-judging-enable" onclick="toggleSetting('judgingActive', true)">
+                <button class="btn btn-primary" id="btn-judging-enable" onclick="toggleSetting('judgingActive', true)" style="flex: 1;">
                   <i class="fa-solid fa-play"></i> פתח שיפוט
                 </button>
-                <button class="btn btn-secondary" id="btn-judging-disable" onclick="toggleSetting('judgingActive', false)" style="border-color: rgba(239,68,68,0.3); color: #ef4444;">
+                <button class="btn btn-secondary" id="btn-judging-disable" onclick="toggleSetting('judgingActive', false)" style="flex: 1;">
                   <i class="fa-solid fa-lock"></i> נעל שיפוט
                 </button>
               </div>
@@ -266,14 +272,17 @@
             <!-- Toggle 3: Leaderboard Visibility -->
             <div class="settings-card" style="background: rgba(255,255,255,0.02); border: 1px solid var(--panel-border); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
               <div>
-                <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;"><i class="fa-solid fa-eye"></i> חשיפת תוצאות לציבור</h4>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+                  <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin: 0;"><i class="fa-solid fa-eye"></i> חשיפת תוצאות לציבור</h4>
+                  <span id="status-badge-leaderboard" style="font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: 600;">טוען...</span>
+                </div>
                 <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">פרסום דירוג 3 הפרויקטים שעלו לגמר ההאקתון (POC) בעמוד הבית הציבורי של האתר הראשי.</p>
               </div>
               <div style="display: flex; gap: 0.5rem;">
-                <button class="btn btn-primary" id="btn-leaderboard-enable" onclick="toggleSetting('leaderboardPublic', true)">
+                <button class="btn btn-primary" id="btn-leaderboard-enable" onclick="toggleSetting('leaderboardPublic', true)" style="flex: 1;">
                   <i class="fa-solid fa-eye"></i> פרסם תוצאות
                 </button>
-                <button class="btn btn-secondary" id="btn-leaderboard-disable" onclick="toggleSetting('leaderboardPublic', false)">
+                <button class="btn btn-secondary" id="btn-leaderboard-disable" onclick="toggleSetting('leaderboardPublic', false)" style="flex: 1;">
                   <i class="fa-solid fa-eye-slash"></i> הסתר תוצאות
                 </button>
               </div>
@@ -391,7 +400,7 @@
   </div>
 
   <!-- Scripts -->
-  <script src="src/config.js?v=2.0"></script>
-  <script src="src/app.js?v=2.0"></script>
+  <script src="src/config.js?v=2.3"></script>
+  <script src="src/app.js?v=2.3"></script>
 </body>
 </html>

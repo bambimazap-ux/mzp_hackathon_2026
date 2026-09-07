@@ -622,11 +622,14 @@ function getSystemSettings() {
   };
 }
 
-// עדכון הגדרות מערכת (מאובטח עם סיסמת שופט)
+// עדכון הגדרות מערכת (מאובטח עם סיסמת/פרטי שופט מנהל)
 function updateSystemSettings(payload) {
-  var auth = verifyJudge(payload.passcode);
+  var auth = verifyJudge(payload);
   if (auth.status !== "success") {
-    return { status: "error", message: "Access Denied" };
+    return { status: "error", message: "גישה נדחתה: פרטי התחברות לא תקפים" };
+  }
+  if (auth.role !== "admin") {
+    return { status: "error", message: "פעולה זו מורשית למנהל מערכת בלבד" };
   }
 
   var props = PropertiesService.getScriptProperties();
