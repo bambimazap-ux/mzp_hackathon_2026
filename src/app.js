@@ -1074,9 +1074,9 @@ function initJudgeUI() {
   const judgingDashboard = document.getElementById('judging-dashboard');
   const logoutBtn = document.getElementById('logout-judge-btn');
 
-  // בדיקת סשן קיים ב-sessionStorage
-  const savedUser = sessionStorage.getItem('mzp_judge_user');
-  const savedPass = sessionStorage.getItem('mzp_judge_pass');
+  // בדיקת התחברות שמורה מקומית בדפדפן (localStorage)
+  const savedUser = localStorage.getItem('mzp_judge_user') || sessionStorage.getItem('mzp_judge_user');
+  const savedPass = localStorage.getItem('mzp_judge_pass') || sessionStorage.getItem('mzp_judge_pass');
   if (savedUser && savedPass) {
     authenticateJudgeUser(savedUser, savedPass);
   }
@@ -1098,6 +1098,8 @@ function initJudgeUI() {
   // התנתקות
   if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
+      localStorage.removeItem('mzp_judge_user');
+      localStorage.removeItem('mzp_judge_pass');
       sessionStorage.removeItem('mzp_judge_user');
       sessionStorage.removeItem('mzp_judge_pass');
       currentJudgeAuth = { username: '', password: '', judgeName: '', role: 'judge' };
@@ -1151,9 +1153,9 @@ async function authenticateJudgeUser(username, password) {
       role: res.judgeInfo ? res.judgeInfo.role : 'judge'
     };
 
-    // שמירה בסשן
-    sessionStorage.setItem('mzp_judge_user', username);
-    sessionStorage.setItem('mzp_judge_pass', password);
+    // שמירה קבועה בדפדפן (localStorage)
+    localStorage.setItem('mzp_judge_user', username);
+    localStorage.setItem('mzp_judge_pass', password);
 
     // עדכון הממשק
     document.getElementById('passcode-screen').style.display = 'none';
