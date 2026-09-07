@@ -996,6 +996,16 @@ textarea.form-control {
   text-align: right;
   margin: 0.3rem 0;
   box-shadow: inset 0 0 15px rgba(0, 245, 212, 0.03);
+  unicode-bidi: isolate;
+}
+
+.project-details-card p, .idea-card p, td {
+  unicode-bidi: isolate;
+}
+
+bdi {
+  unicode-bidi: isolate;
+  display: inline-block;
 }
 
 /* CSS Animations */

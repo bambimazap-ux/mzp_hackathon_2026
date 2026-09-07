@@ -1696,13 +1696,20 @@ async function handleScoreSubmission(e) {
   }
 }
 
-// פונקציית עזר לסינון תגיות HTML למניעת XSS
+// פונקציית עזר לסינון תגיות HTML + בידוד מילים באנגלית למניעת שיבושי כיווניות (BiDi Isolation)
 function escapeHtml(str) {
   if (!str) return '';
-  return String(str)
+  
+  const clean = String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+
+  // בידוד מילים באנגלית (כמו WhatsApp, AI, POC) מוקפות ב-bdi למניעת קפיצות טקסט ומקפים
+  return clean.replace(/([א-ת]+-)?\b([A-Za-z][A-Za-z0-9_\-\.]*)\b/g, (match, prefix, enWord) => {
+    if (['quot', 'amp', 'lt', 'gt'].includes(enWord.toLowerCase())) return match;
+    return (prefix || '') + '<bdi>' + enWord + '</bdi>';
+  });
 }
