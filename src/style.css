@@ -971,6 +971,33 @@ textarea.form-control {
   border-color: var(--accent-cyan);
 }
 
+/* Accordion / Expandable Table Styles for Mobile & Desktop */
+.project-row-clickable {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.project-row-clickable:hover {
+  background: rgba(0, 245, 212, 0.06) !important;
+}
+
+.project-details-row {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.project-details-card {
+  background: rgba(10, 19, 43, 0.75);
+  border: 1px solid rgba(0, 245, 212, 0.25);
+  border-radius: 12px;
+  padding: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  text-align: right;
+  margin: 0.3rem 0;
+  box-shadow: inset 0 0 15px rgba(0, 245, 212, 0.03);
+}
+
 /* CSS Animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
@@ -1046,6 +1073,16 @@ textarea.form-control {
     overflow-y: auto;
     padding: 1.5rem;
     width: calc(100% - 1rem);
+  }
+
+  /* Hide secondary table columns on mobile */
+  .desktop-only {
+    display: none !important;
+  }
+
+  .judge-table th, .judge-table td {
+    padding: 0.6rem 0.4rem;
+    font-size: 0.85rem;
   }
 }
 

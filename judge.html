@@ -111,10 +111,10 @@
             <table class="judge-table" id="screening-table">
               <thead>
                 <tr>
-                  <th>מזהה</th>
-                  <th>שם הפרויקט</th>
-                  <th>חברי הצוות</th>
-                  <th>תיאור האתגר והפתרון</th>
+                  <th style="width: 50px;">#</th>
+                  <th>שם הפרויקט <small style="color: var(--accent-cyan); font-weight: normal; font-size: 0.75rem;">(לחץ להרחבה 👇)</small></th>
+                  <th class="desktop-only">חברי הצוות</th>
+                  <th class="desktop-only">תיאור האתגר והפתרון</th>
                   <th>הסטטוס והציון שלי</th>
                   <th>פעולה</th>
                 </tr>
@@ -139,18 +139,18 @@
             <table class="judge-table" id="screening-leaderboard">
               <thead>
                 <tr>
-                  <th>מיקום</th>
-                  <th>שם הפרויקט</th>
-                  <th>חברי הצוות</th>
-                  <th>ממוצע שופטים (80%)</th>
-                  <th>ציון קהל (20%)</th>
+                  <th style="width: 70px;">מיקום</th>
+                  <th>שם הפרויקט <small style="color: var(--accent-cyan); font-weight: normal; font-size: 0.75rem;">(לחץ להרחבה 👇)</small></th>
+                  <th class="desktop-only">חברי הצוות</th>
+                  <th class="desktop-only">ממוצע שופטים (80%)</th>
+                  <th class="desktop-only">ציון קהל (20%)</th>
                   <th>ציון סופי משוקלל</th>
                   <th>סטטוס</th>
                 </tr>
               </thead>
               <tbody id="screening-leaderboard-tbody">
                 <tr>
-                  <td colspan="8" style="text-align: center; color: var(--text-secondary);">אין עדיין דירוגים להצגה.</td>
+                  <td colspan="7" style="text-align: center; color: var(--text-secondary);">אין עדיין דירוגים להצגה.</td>
                 </tr>
               </tbody>
             </table>
@@ -173,17 +173,17 @@
             <table class="judge-table" id="finals-table">
               <thead>
                 <tr>
-                  <th>מזהה</th>
-                  <th>שם הפרויקט Finalist</th>
-                  <th>חברי הצוות</th>
-                  <th>קישור ל-POC (אפליקציה)</th>
+                  <th style="width: 50px;">#</th>
+                  <th>שם הפרויקט Finalist <small style="color: var(--accent-cyan); font-weight: normal; font-size: 0.75rem;">(לחץ להרחבה 👇)</small></th>
+                  <th class="desktop-only">חברי הצוות</th>
+                  <th class="desktop-only">קישור ל-POC</th>
                   <th>ציון גמר ממוצע</th>
                   <th>פעולה</th>
                 </tr>
               </thead>
               <tbody id="finals-tbody">
                 <tr>
-                  <td colspan="5" style="text-align: center; color: var(--text-secondary);">טוען עולים לגמר...</td>
+                  <td colspan="6" style="text-align: center; color: var(--text-secondary);">טוען עולים לגמר...</td>
                 </tr>
               </tbody>
             </table>
@@ -201,14 +201,14 @@
             <table class="judge-table" id="finals-leaderboard">
               <thead>
                 <tr>
-                  <th>מיקום</th>
-                  <th>שם הפרויקט</th>
-                  <th>חברי הצוות</th>
-                  <th>רלוונטיות (גמר)</th>
-                  <th>ישימות (גמר)</th>
-                  <th>חדשנות (גמר)</th>
-                  <th>ציון גמר סופי</th>
-                  <th>הערות שופטים</th>
+                  <th style="width: 80px;">מיקום</th>
+                  <th>שם הפרויקט <small style="color: var(--accent-cyan); font-weight: normal; font-size: 0.75rem;">(לחץ להרחבה 👇)</small></th>
+                  <th class="desktop-only">חברי הצוות</th>
+                  <th class="desktop-only">רלוונטיות</th>
+                  <th class="desktop-only">ישימות</th>
+                  <th class="desktop-only">חדשנות</th>
+                  <th>ציון סופי</th>
+                  <th class="desktop-only">הערות שופטים</th>
                 </tr>
               </thead>
               <tbody id="finals-leaderboard-tbody">
@@ -400,7 +400,7 @@
   </div>
 
   <!-- Scripts -->
-  <script src="src/config.js?v=2.4"></script>
-  <script src="src/app.js?v=2.4"></script>
+  <script src="src/config.js?v=2.5"></script>
+  <script src="src/app.js?v=2.5"></script>
 </body>
 </html>

@@ -1329,6 +1329,19 @@ function updateSettingsUI(settings) {
   }
 }
 
+// פונקציית עזר להרחבה/כיווץ של פירוט הפרויקט בטבלה מותאמת למובייל ולשולחן עבודה
+window.toggleProjectDetails = (id, type) => {
+  const detailsRow = document.getElementById(`details-${type}-${id}`);
+  const icon = document.getElementById(`expand-icon-${type}-${id}`);
+  if (!detailsRow) return;
+
+  const isHidden = detailsRow.style.display === 'none' || !detailsRow.style.display;
+  detailsRow.style.display = isHidden ? 'table-row' : 'none';
+  if (icon) {
+    icon.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+  }
+};
+
 // רינדור טבלת הסינון (כל ההצעות + סטטוס דירוג אישי)
 function renderScreeningTable(ideas) {
   const tbody = document.getElementById('screening-tbody');
@@ -1349,16 +1362,45 @@ function renderScreeningTable(ideas) {
     const btnClass = isRated ? 'btn-secondary' : 'btn-primary';
 
     return `
-      <tr>
+      <tr class="project-row-clickable" onclick="toggleProjectDetails(${idea.id}, 'screening')">
         <td><strong>#${idea.id}</strong></td>
-        <td><strong>${escapeHtml(idea.title)}</strong></td>
-        <td>${escapeHtml(idea.teammates || '-')}</td>
-        <td style="max-width: 300px; font-size: 0.88rem; color: var(--text-secondary);">${escapeHtml(idea.problem || '-')}</td>
+        <td>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+            <strong style="color: var(--accent-cyan); font-size: 1rem;">${escapeHtml(idea.title)}</strong>
+            <i class="fa-solid fa-chevron-down expand-icon" id="expand-icon-screening-${idea.id}" style="transition: transform 0.3s; color: var(--accent-cyan); font-size: 0.85rem;"></i>
+          </div>
+        </td>
+        <td class="desktop-only">${escapeHtml(idea.teammates || '-')}</td>
+        <td class="desktop-only" style="max-width: 280px; font-size: 0.88rem; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(idea.problem || '-')}</td>
         <td>${myScoreText}</td>
         <td>
-          <button class="btn ${btnClass}" onclick="openScoreModal(${idea.id}, 'Screening')" style="font-size: 0.85rem; padding: 0.4rem 0.8rem;">
+          <button class="btn ${btnClass}" onclick="event.stopPropagation(); openScoreModal(${idea.id}, 'Screening')" style="font-size: 0.85rem; padding: 0.4rem 0.8rem;">
             ${btnText}
           </button>
+        </td>
+      </tr>
+      <tr id="details-screening-${idea.id}" class="project-details-row" style="display: none;">
+        <td colspan="6" style="padding: 0.3rem 0.5rem; background: rgba(0, 245, 212, 0.02);">
+          <div class="project-details-card">
+            <div>
+              <strong style="color: var(--accent-cyan);"><i class="fa-solid fa-users"></i> חברי הצוות:</strong>
+              <span style="color: var(--text-primary); margin-right: 0.5rem;">${escapeHtml(idea.teammates || 'טרם צוינו')}</span>
+            </div>
+            <div>
+              <strong style="color: var(--accent-cyan);"><i class="fa-solid fa-circle-info"></i> תיאור האתגר והפתרון:</strong>
+              <p style="color: var(--text-secondary); margin-top: 0.4rem; line-height: 1.5; white-space: pre-line; background: rgba(255,255,255,0.03); padding: 0.8rem; border-radius: 8px; border: 1px solid var(--panel-border); font-size: 0.9rem;">${escapeHtml(idea.problem || 'אין תיאור מפורט')}</p>
+            </div>
+            ${idea.projectURL ? `
+            <div>
+              <strong style="color: var(--accent-cyan);"><i class="fa-solid fa-link"></i> קישור ל-POC:</strong>
+              <a href="${escapeHtml(idea.projectURL)}" target="_blank" style="color: var(--accent-neon); margin-right: 0.5rem;" onclick="event.stopPropagation();">${escapeHtml(idea.projectURL)}</a>
+            </div>` : ''}
+            <div style="display: flex; justify-content: flex-end; margin-top: 0.3rem;">
+              <button class="btn ${btnClass}" onclick="event.stopPropagation(); openScoreModal(${idea.id}, 'Screening')">
+                ${btnText}
+              </button>
+            </div>
+          </div>
         </td>
       </tr>
     `;
@@ -1370,7 +1412,6 @@ function renderScreeningLeaderboard(ideas) {
   const tbody = document.getElementById('screening-leaderboard-tbody');
   if (!tbody) return;
 
-  // מיון לפי finalScore בסדר יורד
   const sorted = [...ideas].sort((a, b) => (b.finalScore || 0) - (a.finalScore || 0));
 
   if (sorted.length === 0) {
@@ -1391,14 +1432,50 @@ function renderScreeningLeaderboard(ideas) {
       : '<span style="color: var(--text-secondary);">מועמד</span>';
 
     return `
-      <tr style="${isFinalist ? 'background: rgba(0, 245, 212, 0.04);' : ''}">
+      <tr class="project-row-clickable" onclick="toggleProjectDetails(${idea.id}, 'leaderboard')" style="${isFinalist ? 'background: rgba(0, 245, 212, 0.04);' : ''}">
         <td><strong>${rankBadge}</strong></td>
-        <td><strong>${escapeHtml(idea.title)}</strong></td>
-        <td>${escapeHtml(idea.teammates || '-')}</td>
-        <td><strong style="color: var(--accent-cyan);">${idea.overallJudgesAvg ? idea.overallJudgesAvg.toFixed(1) : '0.0'}</strong> <small style="color: var(--text-secondary);">(${idea.judgesCount || 0} שופטים)</small></td>
-        <td>${idea.publicScore ? idea.publicScore.toFixed(1) : '0.0'} <small style="color: var(--text-secondary);">(${idea.votes || 0} קולות)</small></td>
+        <td>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+            <strong style="font-size: 1rem;">${escapeHtml(idea.title)}</strong>
+            <i class="fa-solid fa-chevron-down expand-icon" id="expand-icon-leaderboard-${idea.id}" style="transition: transform 0.3s; color: var(--accent-cyan); font-size: 0.85rem;"></i>
+          </div>
+        </td>
+        <td class="desktop-only">${escapeHtml(idea.teammates || '-')}</td>
+        <td class="desktop-only"><strong style="color: var(--accent-cyan);">${idea.overallJudgesAvg ? idea.overallJudgesAvg.toFixed(1) : '0.0'}</strong> <small style="color: var(--text-secondary);">(${idea.judgesCount || 0} שופטים)</small></td>
+        <td class="desktop-only">${idea.publicScore ? idea.publicScore.toFixed(1) : '0.0'} <small style="color: var(--text-secondary);">(${idea.votes || 0} קולות)</small></td>
         <td><strong style="font-size: 1.1rem; color: var(--accent-neon);">${idea.finalScore ? idea.finalScore.toFixed(2) : '0.00'}</strong></td>
         <td>${statusText}</td>
+      </tr>
+      <tr id="details-leaderboard-${idea.id}" class="project-details-row" style="display: none;">
+        <td colspan="7" style="padding: 0.3rem 0.5rem; background: rgba(0, 245, 212, 0.02);">
+          <div class="project-details-card">
+            <div>
+              <strong style="color: var(--accent-cyan);"><i class="fa-solid fa-users"></i> חברי הצוות:</strong>
+              <span style="color: var(--text-primary); margin-right: 0.5rem;">${escapeHtml(idea.teammates || 'טרם צוינו')}</span>
+            </div>
+            <div>
+              <strong style="color: var(--accent-cyan);"><i class="fa-solid fa-chart-line"></i> פירוט ציונים:</strong>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.5rem; margin-top: 0.4rem;">
+                <div style="background: rgba(255,255,255,0.03); padding: 0.5rem; border-radius: 6px; border: 1px solid var(--panel-border);">
+                  <small style="color: var(--text-secondary);">ממוצע שופטים (80%):</small><br>
+                  <strong style="color: var(--accent-cyan);">${idea.overallJudgesAvg ? idea.overallJudgesAvg.toFixed(1) : '0.0'}</strong> (${idea.judgesCount || 0} שופטים)
+                </div>
+                <div style="background: rgba(255,255,255,0.03); padding: 0.5rem; border-radius: 6px; border: 1px solid var(--panel-border);">
+                  <small style="color: var(--text-secondary);">ציון קהל (20%):</small><br>
+                  <strong>${idea.publicScore ? idea.publicScore.toFixed(1) : '0.0'}</strong> (${idea.votes || 0} קולות)
+                </div>
+                <div style="background: rgba(57,255,20,0.05); padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(57,255,20,0.2);">
+                  <small style="color: var(--text-secondary);">ציון סופי משוקלל:</small><br>
+                  <strong style="color: var(--accent-neon); font-size: 1.1rem;">${idea.finalScore ? idea.finalScore.toFixed(2) : '0.00'}</strong>
+                </div>
+              </div>
+            </div>
+            <div>
+              <strong style="color: var(--accent-cyan);"><i class="fa-solid fa-circle-info"></i> תיאור האתגר והפתרון:</strong>
+              <p style="color: var(--text-secondary); margin-top: 0.4rem; line-height: 1.5; white-space: pre-line; background: rgba(255,255,255,0.03); padding: 0.8rem; border-radius: 8px; border: 1px solid var(--panel-border); font-size: 0.9rem;">${escapeHtml(idea.problem || 'אין תיאור מפורט')}</p>
+            </div>
+          </div>
+        </td>
       </tr>
     `;
   }).join('');
@@ -1423,16 +1500,45 @@ function renderFinalsTable(ideas) {
       : `<span class="badge" style="background: rgba(255, 255, 255, 0.08); color: var(--text-secondary); padding: 0.3rem 0.7rem; border-radius: 8px;">טרם דירגת בגמר</span>`;
 
     return `
-      <tr>
+      <tr class="project-row-clickable" onclick="toggleProjectDetails(${idea.id}, 'finals')">
         <td><strong>#${idea.id}</strong></td>
-        <td><strong style="color: var(--accent-cyan);">${escapeHtml(idea.title)}</strong></td>
-        <td>${escapeHtml(idea.teammates || '-')}</td>
-        <td>${idea.projectURL ? `<a href="${escapeHtml(idea.projectURL)}" target="_blank" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.2rem 0.6rem;"><i class="fa-solid fa-external-link"></i> פתח POC</a>` : '<span style="color: var(--text-secondary);">טרם הועלה קישור</span>'}</td>
+        <td>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+            <strong style="color: var(--accent-cyan); font-size: 1rem;">${escapeHtml(idea.title)}</strong>
+            <i class="fa-solid fa-chevron-down expand-icon" id="expand-icon-finals-${idea.id}" style="transition: transform 0.3s; color: var(--accent-cyan); font-size: 0.85rem;"></i>
+          </div>
+        </td>
+        <td class="desktop-only">${escapeHtml(idea.teammates || '-')}</td>
+        <td class="desktop-only">${idea.projectURL ? `<a href="${escapeHtml(idea.projectURL)}" target="_blank" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.2rem 0.6rem;" onclick="event.stopPropagation();"><i class="fa-solid fa-external-link"></i> פתח POC</a>` : '<span style="color: var(--text-secondary);">טרם הועלה קישור</span>'}</td>
         <td>${myScoreText}</td>
         <td>
-          <button class="btn btn-primary" onclick="openScoreModal(${idea.id}, 'Finals')" style="font-size: 0.85rem; padding: 0.4rem 0.8rem;">
+          <button class="btn btn-primary" onclick="event.stopPropagation(); openScoreModal(${idea.id}, 'Finals')" style="font-size: 0.85rem; padding: 0.4rem 0.8rem;">
             <i class="fa-solid fa-trophy"></i> דרג בגמר
           </button>
+        </td>
+      </tr>
+      <tr id="details-finals-${idea.id}" class="project-details-row" style="display: none;">
+        <td colspan="6" style="padding: 0.3rem 0.5rem; background: rgba(0, 245, 212, 0.02);">
+          <div class="project-details-card">
+            <div>
+              <strong style="color: var(--accent-cyan);"><i class="fa-solid fa-users"></i> חברי הצוות:</strong>
+              <span style="color: var(--text-primary); margin-right: 0.5rem;">${escapeHtml(idea.teammates || 'טרם צוינו')}</span>
+            </div>
+            <div>
+              <strong style="color: var(--accent-cyan);"><i class="fa-solid fa-circle-info"></i> תיאור האתגר והפתרון:</strong>
+              <p style="color: var(--text-secondary); margin-top: 0.4rem; line-height: 1.5; white-space: pre-line; background: rgba(255,255,255,0.03); padding: 0.8rem; border-radius: 8px; border: 1px solid var(--panel-border); font-size: 0.9rem;">${escapeHtml(idea.problem || 'אין תיאור מפורט')}</p>
+            </div>
+            ${idea.projectURL ? `
+            <div>
+              <strong style="color: var(--accent-cyan);"><i class="fa-solid fa-link"></i> קישור ל-POC (אפליקציה/מצגת):</strong>
+              <a href="${escapeHtml(idea.projectURL)}" target="_blank" style="color: var(--accent-neon); margin-right: 0.5rem;" onclick="event.stopPropagation();">${escapeHtml(idea.projectURL)}</a>
+            </div>` : ''}
+            <div style="display: flex; justify-content: flex-end; margin-top: 0.3rem;">
+              <button class="btn btn-primary" onclick="event.stopPropagation(); openScoreModal(${idea.id}, 'Finals')">
+                <i class="fa-solid fa-trophy"></i> דרג בגמר
+              </button>
+            </div>
+          </div>
         </td>
       </tr>
     `;
@@ -1447,21 +1553,46 @@ function renderFinalsLeaderboard(ideas) {
   const finalists = [...ideas].sort((a, b) => (b.finalScore || 0) - (a.finalScore || 0)).slice(0, 3);
 
   if (finalists.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-secondary);">אין עדיין דירוגי גמר.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-secondary);">אין עדיין דירוגי גמר.</td></tr>';
     return;
   }
 
   tbody.innerHTML = finalists.map((idea, index) => {
     const trophies = ['🏆 מקום 1 (הזוכה בפרס!)', '🥈 מקום 2', '🥉 מקום 3'];
     return `
-      <tr>
+      <tr class="project-row-clickable" onclick="toggleProjectDetails(${idea.id}, 'finals-lb')">
         <td><strong>${trophies[index] || index + 1}</strong></td>
-        <td><strong style="color: var(--accent-neon);">${escapeHtml(idea.title)}</strong></td>
-        <td>${escapeHtml(idea.teammates || '-')}</td>
-        <td>${idea.overallJudgesAvg ? idea.overallJudgesAvg.toFixed(1) : '0.0'}</td>
-        <td>${idea.publicScore ? idea.publicScore.toFixed(1) : '0.0'}</td>
+        <td>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+            <strong style="color: var(--accent-neon); font-size: 1rem;">${escapeHtml(idea.title)}</strong>
+            <i class="fa-solid fa-chevron-down expand-icon" id="expand-icon-finals-lb-${idea.id}" style="transition: transform 0.3s; color: var(--accent-cyan); font-size: 0.85rem;"></i>
+          </div>
+        </td>
+        <td class="desktop-only">${escapeHtml(idea.teammates || '-')}</td>
+        <td class="desktop-only">${idea.overallJudgesAvg ? idea.overallJudgesAvg.toFixed(1) : '0.0'}</td>
+        <td class="desktop-only">${idea.publicScore ? idea.publicScore.toFixed(1) : '0.0'}</td>
+        <td class="desktop-only">${idea.finalScore ? idea.finalScore.toFixed(2) : '0.00'}</td>
         <td><strong style="font-size: 1.15rem; color: var(--accent-cyan);">${idea.finalScore ? idea.finalScore.toFixed(2) : '0.00'}</strong></td>
-        <td style="font-size: 0.85rem; color: var(--text-secondary);">${idea.myScore && idea.myScore.notes ? escapeHtml(idea.myScore.notes) : '-'}</td>
+        <td class="desktop-only" style="font-size: 0.85rem; color: var(--text-secondary);">${idea.myScore && idea.myScore.notes ? escapeHtml(idea.myScore.notes) : '-'}</td>
+      </tr>
+      <tr id="details-finals-lb-${idea.id}" class="project-details-row" style="display: none;">
+        <td colspan="8" style="padding: 0.3rem 0.5rem; background: rgba(0, 245, 212, 0.02);">
+          <div class="project-details-card">
+            <div>
+              <strong style="color: var(--accent-cyan);"><i class="fa-solid fa-users"></i> חברי הצוות:</strong>
+              <span style="color: var(--text-primary); margin-right: 0.5rem;">${escapeHtml(idea.teammates || 'טרם צוינו')}</span>
+            </div>
+            <div>
+              <strong style="color: var(--accent-cyan);"><i class="fa-solid fa-circle-info"></i> תיאור האתגר והפתרון:</strong>
+              <p style="color: var(--text-secondary); margin-top: 0.4rem; line-height: 1.5; white-space: pre-line; background: rgba(255,255,255,0.03); padding: 0.8rem; border-radius: 8px; border: 1px solid var(--panel-border); font-size: 0.9rem;">${escapeHtml(idea.problem || 'אין תיאור מפורט')}</p>
+            </div>
+            ${idea.myScore && idea.myScore.notes ? `
+            <div>
+              <strong style="color: var(--accent-cyan);"><i class="fa-solid fa-comment-dots"></i> הערות הדירוג שלי:</strong>
+              <p style="color: var(--text-primary); margin-top: 0.3rem;">${escapeHtml(idea.myScore.notes)}</p>
+            </div>` : ''}
+          </div>
+        </td>
       </tr>
     `;
   }).join('');
