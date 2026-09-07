@@ -3,18 +3,20 @@
  * 
  * הוראות התקנה:
  * 1. פתח גיליון Google Sheets חדש בשם "האקתון AI 2026".
- * 2. צור 3 לשוניות (Tabs) בשמות המדויקים הבאים:
+ * 2. צור 4 לשוניות (Tabs) בשמות המדויקים הבאים:
  *    - "Ideas"
  *    - "Teammates"
  *    - "Scores"
+ *    - "Judges"
  * 3. בשורה הראשונה של כל גיליון (כותרות) הגדר את העמודות הבאות:
- *    - בגיליון Ideas: ID | Timestamp | Title | Problem | Teammates | Status | ProjectURL
+ *    - בגיליון Ideas: ID | Timestamp | Title | Problem | Teammates | Status | ProjectURL | Votes
  *    - בגיליון Teammates: ID | Timestamp | Name | Department | Description | Contact
- *    - בגיליון Scores: ID | Timestamp | JudgeName | IdeaID | Relevance | Feasibility | Innovation | Notes | Average
+ *    - בגיליון Scores: ID | Timestamp | JudgeUsername | IdeaID | Relevance | Feasibility | Innovation | Notes | Average | JudgeName
+ *    - בגיליון Judges: Username | Password | Name | Role
  * 4. תחת "הרחבות" (Extensions) -> "Apps Script", מחק את הקוד הקיים והדבק את הקוד הבא.
  * 5. (אופציונלי עבור הצ'אטבוט) בהגדרות הפרויקט (אייקון גלגל השיניים), תחת "Script Properties", הוסף מאפיין חדש:
  *    - Key: GEMINI_API_KEY | Value: [מפתח ה-API שלך מ-Google AI Studio]
- *    - Key: JUDGE_PASSCODE | Value: mzp_judge_2026 (או כל סיסמה אחרת שתרצה)
+ *    - Key: JUDGE_PASSCODE | Value: mzp_judge_2026 (סיסמת מנהל גיבוי)
  * 6. לחץ על "Deploy" -> "New deployment" -> בחר סוג "Web app".
  *    - Execute as: "Me" (החשבון שלך)
  *    - Who has access: "Anyone"
@@ -62,9 +64,9 @@ function doPost(e) {
     } else if (action === "add_teammate_wanted") {
       response = addTeammateWanted(payload);
     } else if (action === "verify_judge") {
-      response = verifyJudge(payload.passcode);
+      response = verifyJudge(payload);
     } else if (action === "get_judging_data") {
-      response = getJudgingData(payload.passcode);
+      response = getJudgingData(payload);
     } else if (action === "submit_score") {
       response = submitScore(payload);
     } else if (action === "vote_idea") {
@@ -214,33 +216,68 @@ function addTeammateWanted(payload) {
   }
 }
 
-// אימות סיסמת שופט
-function verifyJudge(passcode) {
+// אימות שם משתמש וסיסמת שופט (או קוד גישה מנהלי)
+function verifyJudge(payload) {
+  var username = payload && typeof payload === 'object' ? payload.username : null;
+  var password = payload && typeof payload === 'object' ? payload.password : null;
+  var passcode = payload && typeof payload === 'object' ? payload.passcode : payload;
+
+  // 1. בדיקת סיסמת מנהל גיבוי גלובלית
   var props = PropertiesService.getScriptProperties();
   var actualPasscode = props.getProperty("JUDGE_PASSCODE") || DEFAULT_PASSCODE;
-  
-  if (passcode === actualPasscode) {
-    return { status: "success" };
-  } else {
-    return { status: "error", message: "Invalid passcode" };
+  if (passcode === actualPasscode || password === actualPasscode) {
+    return {
+      status: "success",
+      username: "admin",
+      judgeName: "מנהל מערכת",
+      role: "admin"
+    };
   }
+
+  // 2. אימות מול לשונית "Judges" ב-Google Sheets
+  if (username && password) {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var judgesSheet = ss.getSheetByName("Judges");
+    if (judgesSheet && judgesSheet.getLastRow() > 1) {
+      var data = judgesSheet.getRange(2, 1, judgesSheet.getLastRow() - 1, 4).getValues();
+      for (var i = 0; i < data.length; i++) {
+        var u = String(data[i][0]).trim();
+        var p = String(data[i][1]).trim();
+        var name = String(data[i][2]).trim();
+        var role = String(data[i][3]).trim() || "judge";
+        if (u.toLowerCase() === String(username).trim().toLowerCase() && p === String(password).trim()) {
+          return {
+            status: "success",
+            username: u,
+            judgeName: name || u,
+            role: role
+          };
+        }
+      }
+    }
+  }
+
+  return { status: "error", message: "שם משתמש או סיסמה שגויים" };
 }
 
-// משיכת נתוני שיפוט מלאים (מצריך אימות סיסמה צד שרת)
-function getJudgingData(passcode) {
-  var auth = verifyJudge(passcode);
+// משיכת נתוני שיפוט מלאים + דירוגים אישיים של השופט המחובר
+function getJudgingData(payload) {
+  var auth = verifyJudge(payload);
   if (auth.status !== "success") {
-    return { status: "error", message: "Access Denied" };
+    return { status: "error", message: "גישה נדחתה: שם משתמש או סיסמה שגויים" };
   }
 
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   
-  // 1. משיכת רעיונות (כל העמודות)
+  // 1. משיכת רעיונות (כל העמודות כולל הצבעות)
   var ideasSheet = ss.getSheetByName("Ideas");
   var ideas = [];
+  var maxVotes = 0;
   if (ideasSheet && ideasSheet.getLastRow() > 1) {
-    var data = ideasSheet.getRange(2, 1, ideasSheet.getLastRow() - 1, 7).getValues();
+    var data = ideasSheet.getRange(2, 1, ideasSheet.getLastRow() - 1, 8).getValues();
     ideas = data.map(function(row) {
+      var v = Number(row[7]) || 0;
+      if (v > maxVotes) maxVotes = v;
       return {
         id: row[0],
         timestamp: row[1],
@@ -248,7 +285,8 @@ function getJudgingData(passcode) {
         problem: row[3],
         teammates: row[4],
         status: row[5],
-        projectURL: row[6]
+        projectURL: row[6],
+        votes: v
       };
     });
   }
@@ -257,38 +295,95 @@ function getJudgingData(passcode) {
   var scoresSheet = ss.getSheetByName("Scores");
   var scores = [];
   if (scoresSheet && scoresSheet.getLastRow() > 1) {
-    var data = scoresSheet.getRange(2, 1, scoresSheet.getLastRow() - 1, 9).getValues();
+    var data = scoresSheet.getRange(2, 1, scoresSheet.getLastRow() - 1, 10).getValues();
     scores = data.map(function(row) {
       return {
         id: row[0],
         timestamp: row[1],
-        judgeName: row[2],
+        judgeUsername: String(row[2]),
         ideaId: row[3],
-        relevance: row[4],
-        feasibility: row[5],
-        innovation: row[6],
+        relevance: Number(row[4]) || 0,
+        feasibility: Number(row[5]) || 0,
+        innovation: Number(row[6]) || 0,
         notes: row[7],
-        average: row[8]
+        average: Number(row[8]) || 0,
+        judgeName: String(row[9] || row[2])
       };
     });
   }
+
+  // 3. חישוב נתונים משוקללים וציונים אישיים עבור כל רעיון
+  var enrichedIdeas = ideas.map(function(idea) {
+    // מציאת הציון האישי שהשופט המחובר נתן לרעיון זה
+    var myScore = null;
+    for (var i = 0; i < scores.length; i++) {
+      if (Number(scores[i].ideaId) === Number(idea.id) && 
+          (scores[i].judgeUsername.toLowerCase() === auth.username.toLowerCase() ||
+           scores[i].judgeName === auth.judgeName)) {
+        myScore = scores[i];
+        break;
+      }
+    }
+
+    // חישוב ממוצע השופטים הכולל עבור רעיון זה
+    var ideaJudgeScores = scores.filter(function(s) { return Number(s.ideaId) === Number(idea.id); });
+    var overallJudgesAvg = 0;
+    if (ideaJudgeScores.length > 0) {
+      var sum = 0;
+      for (var k = 0; k < ideaJudgeScores.length; k++) {
+        sum += ideaJudgeScores[k].average;
+      }
+      overallJudgesAvg = sum / ideaJudgeScores.length;
+    }
+
+    // חישוב ציון הצבעת הקהל בסולם 1-10 (20% מהציון הסופי)
+    var publicScore = 0;
+    if (maxVotes > 0) {
+      publicScore = (idea.votes / maxVotes) * 10;
+    }
+
+    // ציון משוקלל סופי: 80% שופטים + 20% קהל
+    var finalScore = (overallJudgesAvg * 0.8) + (publicScore * 0.2);
+
+    return {
+      id: idea.id,
+      timestamp: idea.timestamp,
+      title: idea.title,
+      problem: idea.problem,
+      teammates: idea.teammates,
+      status: idea.status,
+      projectURL: idea.projectURL,
+      votes: idea.votes,
+      myScore: myScore,
+      ratedByMe: myScore !== null,
+      myAverage: myScore ? myScore.average : null,
+      overallJudgesAvg: Math.round(overallJudgesAvg * 100) / 100,
+      publicScore: Math.round(publicScore * 100) / 100,
+      finalScore: Math.round(finalScore * 100) / 100,
+      judgesCount: ideaJudgeScores.length
+    };
+  });
 
   var settings = getSystemSettings();
 
   return {
     status: "success",
-    ideas: ideas,
+    judgeInfo: {
+      username: auth.username,
+      judgeName: auth.judgeName,
+      role: auth.role
+    },
+    ideas: enrichedIdeas,
     scores: scores,
     settings: settings
   };
 }
 
-// הזנת ציון חדש (מוגן מפני נעילות ומאומת צד שרת)
+// הזנת/עדכון ציון (מוגן מפני נעילות ומאומת צד שרת)
 function submitScore(payload) {
-  // אימות סיסמה בשרת
-  var auth = verifyJudge(payload.passcode);
+  var auth = verifyJudge(payload);
   if (auth.status !== "success") {
-    return { status: "error", message: "Access Denied: Invalid Passcode" };
+    return { status: "error", message: "גישה נדחתה: פרטי שופט לא תקפים" };
   }
   
   // בדיקה האם השיפוט נעול
@@ -307,28 +402,64 @@ function submitScore(payload) {
     if (!sheet) return { status: "error", message: "Scores sheet not found" };
 
     var lastRow = sheet.getLastRow();
-    var nextId = 1;
+    var ideaId = Number(payload.ideaId);
+    var judgeUsername = auth.username;
+    var judgeName = payload.judgeName || auth.judgeName;
+    var relevance = Number(payload.relevance) || 0;
+    var feasibility = Number(payload.feasibility) || 0;
+    var innovation = Number(payload.innovation) || 0;
+    var average = (relevance + feasibility + innovation) / 3;
+    var notes = payload.notes || "";
+    var timestamp = new Date();
+
+    // חיפוש האם כבר קיים ציון קודם של אותו שופט עבור רעיון זה
+    var existingRowIndex = -1;
     if (lastRow > 1) {
-      nextId = Number(sheet.getRange(lastRow, 1).getValue()) + 1;
+      // עמודות: ID | Timestamp | JudgeUsername | IdeaID | Relevance | Feasibility | Innovation | Notes | Average | JudgeName
+      var data = sheet.getRange(2, 1, lastRow - 1, 10).getValues();
+      for (var i = 0; i < data.length; i++) {
+        var rowJudgeU = String(data[i][2]).trim();
+        var rowIdeaId = Number(data[i][3]);
+        if (rowIdeaId === ideaId && rowJudgeU.toLowerCase() === judgeUsername.toLowerCase()) {
+          existingRowIndex = i + 2; // שורה פיזית בגיליון
+          break;
+        }
+      }
     }
 
-    var timestamp = new Date();
-    var average = (payload.relevance + payload.feasibility + payload.innovation) / 3;
+    if (existingRowIndex > 1) {
+      // עדכון שורה קיימת
+      sheet.getRange(existingRowIndex, 2).setValue(timestamp);
+      sheet.getRange(existingRowIndex, 5).setValue(relevance);
+      sheet.getRange(existingRowIndex, 6).setValue(feasibility);
+      sheet.getRange(existingRowIndex, 7).setValue(innovation);
+      sheet.getRange(existingRowIndex, 8).setValue(notes);
+      sheet.getRange(existingRowIndex, 9).setValue(average);
+      sheet.getRange(existingRowIndex, 10).setValue(judgeName);
 
-    // עמודות: ID | Timestamp | JudgeName | IdeaID | Relevance | Feasibility | Innovation | Notes | Average
-    sheet.appendRow([
-      nextId, 
-      timestamp, 
-      payload.judgeName, 
-      payload.ideaId, 
-      payload.relevance, 
-      payload.feasibility, 
-      payload.innovation, 
-      payload.notes, 
-      average
-    ]);
+      return { status: "success", id: sheet.getRange(existingRowIndex, 1).getValue(), action: "updated" };
+    } else {
+      // הוספת שורה חדשה
+      var nextId = 1;
+      if (lastRow > 1) {
+        nextId = Number(sheet.getRange(lastRow, 1).getValue()) + 1;
+      }
 
-    return { status: "success", id: nextId };
+      sheet.appendRow([
+        nextId, 
+        timestamp, 
+        judgeUsername, 
+        ideaId, 
+        relevance, 
+        feasibility, 
+        innovation, 
+        notes, 
+        average,
+        judgeName
+      ]);
+
+      return { status: "success", id: nextId, action: "created" };
+    }
   } catch (error) {
     return { status: "error", message: error.toString() };
   } finally {

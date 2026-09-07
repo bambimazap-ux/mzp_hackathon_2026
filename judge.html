@@ -10,20 +10,28 @@
 <body id="judge-page">
 
   <div class="container fade-in">
-    <!-- Passcode Verification Screen (Shown by default) -->
+    <!-- Login Screen (Username & Password) -->
     <div id="passcode-screen" class="glass-card passcode-container">
       <div style="margin-bottom: 2rem;">
         <img src="assets/לוגו מדור מופ.png" alt="לוגו מופ" style="height: 80px; filter: drop-shadow(0 0 10px rgba(0, 245, 212, 0.2));">
       </div>
-      <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">מערכת שיפוט והערכה - האקתון מז"פ</h3>
-      <p style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem;">הזן את קוד הגישה החסוי שקיבלת כדי לגשת לנתוני ההגשות ולדירוגי השופטים:</p>
+      <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;">מערכת שיפוט והערכה</h3>
+      <p style="color: var(--accent-cyan); font-weight: 600; margin-bottom: 1.5rem;">האקתון AI מז"פ 2026</p>
+      <p style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem;">הזינו את שם המשתמש והסיסמה האישית כדי להתחבר לדשבורד השופט האישי:</p>
       
-      <div class="form-group">
-        <input type="password" id="judge-passcode-input" class="form-control" placeholder="קוד גישה חסוי" style="text-align: center; font-size: 1.2rem; letter-spacing: 2px;" required>
-      </div>
-      <button id="verify-passcode-btn" class="btn btn-primary" style="width: 100%;">
-        <i class="fa-solid fa-lock-open"></i> התחבר למערכת
-      </button>
+      <form id="judge-login-form">
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="judge-username-input" style="display: block; text-align: right; margin-bottom: 0.4rem; font-size: 0.9rem;">שם משתמש:</label>
+          <input type="text" id="judge-username-input" class="form-control" placeholder="שם משתמש" style="text-align: center; font-size: 1.1rem;" required>
+        </div>
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label for="judge-password-input" style="display: block; text-align: right; margin-bottom: 0.4rem; font-size: 0.9rem;">סיסמה אישית:</label>
+          <input type="password" id="judge-password-input" class="form-control" placeholder="סיסמה" style="text-align: center; font-size: 1.1rem; letter-spacing: 2px;" required>
+        </div>
+        <button type="submit" id="verify-passcode-btn" class="btn btn-primary" style="width: 100%;">
+          <i class="fa-solid fa-right-to-bracket"></i> התחבר למערכת
+        </button>
+      </form>
       <div style="margin-top: 1.5rem;">
         <a href="index.html" style="color: var(--accent-cyan); text-decoration: none; font-size: 0.9rem;">
           <i class="fa-solid fa-arrow-right"></i> חזרה לפורטל הציבורי
@@ -52,6 +60,21 @@
         </div>
       </header>
 
+      <!-- Logged-in Judge Info Bar -->
+      <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0, 245, 212, 0.05); border: 1px solid rgba(0, 245, 212, 0.2); border-radius: 12px; padding: 0.8rem 1.2rem; margin-bottom: 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.8rem;">
+          <i class="fa-solid fa-user-gear" style="color: var(--accent-cyan); font-size: 1.2rem;"></i>
+          <div>
+            <span style="font-size: 0.85rem; color: var(--text-secondary);">שופט מחובר:</span>
+            <strong id="logged-judge-name" style="color: #fff; margin-right: 0.4rem;">טוען...</strong>
+            <span id="logged-judge-role" class="badge" style="background: rgba(0, 245, 212, 0.15); color: var(--accent-cyan); margin-right: 0.5rem; padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.75rem;">שופט</span>
+          </div>
+        </div>
+        <button id="logout-judge-btn" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+          <i class="fa-solid fa-right-from-bracket"></i> התנתק
+        </button>
+      </div>
+
       <!-- Tabs Navigation -->
       <div class="tabs-container">
         <button class="tab-btn active" id="tab-screening-btn">
@@ -74,7 +97,7 @@
               <i class="fa-solid fa-rotate"></i> רענן נתונים
             </button>
           </div>
-          <p style="color: var(--text-secondary); margin-bottom: 2rem;">לחצו על פרויקט בטבלה כדי לפתוח את ממשק הניקוד עבורו. המערכת תחשב אוטומטית את ממוצע הציונים.</p>
+          <p style="color: var(--text-secondary); margin-bottom: 2rem;">לחצו על "דרג / ערוך" בטבלה כדי לפתוח את ממשק הניקוד עבור הרעיון. הציונים שאתם מזינים הם אישיים עבורכם וניתנים לעריכה חוזרת.</p>
           
           <div class="judge-table-container">
             <table class="judge-table" id="screening-table">
@@ -84,7 +107,7 @@
                   <th>שם הפרויקט</th>
                   <th>חברי הצוות</th>
                   <th>תיאור האתגר והפתרון</th>
-                  <th>ציון ממוצע</th>
+                  <th>הסטטוס והציון שלי</th>
                   <th>פעולה</th>
                 </tr>
               </thead>
@@ -100,9 +123,9 @@
         <!-- Leaderboard Stage A -->
         <div class="glass-card" style="border-color: rgba(0, 245, 212, 0.2);">
           <div class="section-header">
-            <h2 class="section-title" style="color: var(--accent-cyan);"><i class="fa-solid fa-ranking-stars"></i> טבלת מובילים - שלב א'</h2>
+            <h2 class="section-title" style="color: var(--accent-cyan);"><i class="fa-solid fa-ranking-stars"></i> טבלת מובילים - שלב א' (משוקלל 80/20)</h2>
           </div>
-          <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">דירוג הפרויקטים על פי ממוצע הציונים המשוקלל של כל השופטים. שלוש ההצעות המובילות יעפילו להאקתון.</p>
+          <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">דירוג הפרויקטים על פי 80% ממוצע שופטים + 20% הצבעת קהל. שלוש ההצעות המובילות יעפילו להאקתון.</p>
           
           <div class="judge-table-container">
             <table class="judge-table" id="screening-leaderboard">
@@ -111,10 +134,9 @@
                   <th>מיקום</th>
                   <th>שם הפרויקט</th>
                   <th>חברי הצוות</th>
-                  <th>ממוצע רלוונטיות</th>
-                  <th>ממוצע ישימות</th>
-                  <th>ממוצע חדשנות</th>
-                  <th>ציון משוקלל סופי</th>
+                  <th>ממוצע שופטים (80%)</th>
+                  <th>ציון קהל (20%)</th>
+                  <th>ציון סופי משוקלל</th>
                   <th>סטטוס</th>
                 </tr>
               </thead>
