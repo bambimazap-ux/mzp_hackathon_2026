@@ -64,7 +64,7 @@
       </header>
 
       <!-- Logged-in Judge Info Bar -->
-      <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0, 245, 212, 0.05); border: 1px solid rgba(0, 245, 212, 0.2); border-radius: 12px; padding: 0.8rem 1.2rem; margin-bottom: 1.5rem;">
+      <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0, 245, 212, 0.05); border: 1px solid rgba(0, 245, 212, 0.2); border-radius: 12px; padding: 0.8rem 1.2rem; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.8rem;">
         <div style="display: flex; align-items: center; gap: 0.8rem;">
           <i class="fa-solid fa-user-gear" style="color: var(--accent-cyan); font-size: 1.2rem;"></i>
           <div>
@@ -73,9 +73,14 @@
             <span id="logged-judge-role" class="badge" style="background: rgba(0, 245, 212, 0.15); color: var(--accent-cyan); margin-right: 0.5rem; padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.75rem;">שופט</span>
           </div>
         </div>
-        <button id="logout-judge-btn" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
-          <i class="fa-solid fa-right-from-bracket"></i> התנתק
-        </button>
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <a href="index.html" class="btn btn-secondary" style="padding: 0.4rem 0.9rem; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem;">
+            <i class="fa-solid fa-house"></i> חזרה לפורטל הציבורי
+          </a>
+          <button id="logout-judge-btn" class="btn btn-secondary" style="padding: 0.4rem 0.9rem; font-size: 0.85rem;">
+            <i class="fa-solid fa-right-from-bracket"></i> התנתק
+          </button>
+        </div>
       </div>
 
       <!-- Tabs Navigation -->
