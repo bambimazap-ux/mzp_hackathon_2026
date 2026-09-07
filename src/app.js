@@ -1197,11 +1197,92 @@ function renderJudgingDashboard(data) {
   judgingIdeas = data.ideas || [];
   judgingScores = data.scores || [];
 
+  // הרשאות פאנל ניהול - להציג כפתור ניהול רק למנהל מערכת
+  const settingsTabBtn = document.getElementById('tab-settings-btn');
+  if (settingsTabBtn) {
+    if (currentJudgeAuth.role === 'admin') {
+      settingsTabBtn.style.display = 'inline-flex';
+    } else {
+      settingsTabBtn.style.display = 'none';
+      // במידה והשופט נמצא בטאב ניהול, נעביר אותו לטאב סינון
+      if (settingsTabBtn.classList.contains('active')) {
+        document.getElementById('tab-screening-btn').click();
+      }
+    }
+  }
+
   renderScreeningTable(judgingIdeas);
   renderScreeningLeaderboard(judgingIdeas);
   renderFinalsTable(judgingIdeas);
   renderFinalsLeaderboard(judgingIdeas);
   renderPublicWinner(judgingIdeas);
+  if (data.settings) updateSettingsUI(data.settings);
+}
+
+// שינוי הגדרות מערכת מהפנל (מנהל מערכת בלבד)
+window.toggleSetting = async (key, val) => {
+  if (!currentJudgeAuth.username || !currentJudgeAuth.password) return;
+
+  showToast('מעדכן הגדרות מערכת...', 'success');
+
+  const payload = {
+    action: 'update_system_settings',
+    username: currentJudgeAuth.username,
+    password: currentJudgeAuth.password
+  };
+  payload[key] = val;
+
+  const result = await apiPost(payload);
+
+  if (result.status === 'success') {
+    showToast('ההגדרה עודכנה בהצלחה!', 'success');
+    updateSettingsUI(result.settings);
+  } else {
+    showToast('שגיאה בעדכון ההגדרה: ' + result.message, 'error');
+  }
+};
+
+function updateSettingsUI(settings) {
+  if (!settings) return;
+
+  // 1. כפתורי הצבעת קהל
+  const btnVotingEnable = document.getElementById('btn-voting-enable');
+  const btnVotingDisable = document.getElementById('btn-voting-disable');
+  if (btnVotingEnable && btnVotingDisable) {
+    if (settings.publicVotingActive !== false) {
+      btnVotingEnable.className = 'btn btn-primary';
+      btnVotingDisable.className = 'btn btn-secondary';
+    } else {
+      btnVotingEnable.className = 'btn btn-secondary';
+      btnVotingDisable.className = 'btn btn-primary';
+    }
+  }
+
+  // 2. כפתורי שיפוט שופטים
+  const btnJudgingEnable = document.getElementById('btn-judging-enable');
+  const btnJudgingDisable = document.getElementById('btn-judging-disable');
+  if (btnJudgingEnable && btnJudgingDisable) {
+    if (settings.judgingActive !== false) {
+      btnJudgingEnable.className = 'btn btn-primary';
+      btnJudgingDisable.className = 'btn btn-secondary';
+    } else {
+      btnJudgingEnable.className = 'btn btn-secondary';
+      btnJudgingDisable.className = 'btn btn-primary';
+    }
+  }
+
+  // 3. כפתורי פרסום תוצאות
+  const btnLeaderboardEnable = document.getElementById('btn-leaderboard-enable');
+  const btnLeaderboardDisable = document.getElementById('btn-leaderboard-disable');
+  if (btnLeaderboardEnable && btnLeaderboardDisable) {
+    if (settings.leaderboardPublic === true) {
+      btnLeaderboardEnable.className = 'btn btn-primary';
+      btnLeaderboardDisable.className = 'btn btn-secondary';
+    } else {
+      btnLeaderboardEnable.className = 'btn btn-secondary';
+      btnLeaderboardDisable.className = 'btn btn-primary';
+    }
+  }
 }
 
 // רינדור טבלת הסינון (כל ההצעות + סטטוס דירוג אישי)
