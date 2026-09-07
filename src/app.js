@@ -1412,6 +1412,10 @@ async function handleScoreSubmission(e) {
   const innovation = Number(document.getElementById('score-innovation').value);
   const notes = document.getElementById('score-notes').value.trim();
 
+  // סגירת החלון המודאלי מידית וחזרה למסך השיפוט
+  const modal = document.getElementById('score-modal');
+  if (modal) modal.classList.remove('active');
+
   showToast('שומר ציון במערכת...', 'success');
 
   const payload = {
@@ -1429,10 +1433,7 @@ async function handleScoreSubmission(e) {
   const res = await apiPost(payload);
 
   if (res.status === 'success') {
-    const modal = document.getElementById('score-modal');
-    if (modal) modal.classList.remove('active');
-    
-    showToast(res.action === 'updated' ? 'הדירוג עודכן בהצלחה!' : 'הדירוג שנשמר בהצלחה!', 'success');
+    showToast(res.action === 'updated' ? 'הדירוג עודכן בהצלחה!' : 'הדירוג נשמר בהצלחה!', 'success');
     await loadJudgingData();
   } else {
     showToast('שגיאה בשמירת הציון: ' + res.message, 'error');
