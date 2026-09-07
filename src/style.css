@@ -1085,14 +1085,51 @@ bdi {
     width: calc(100% - 1rem);
   }
 
+  /* Full-width container and glass-card on mobile */
+  .container {
+    padding: 1rem 0.5rem !important;
+  }
+  
+  .glass-card {
+    padding: 1rem 0.5rem !important;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+  }
+
+  .judge-table-container {
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .judge-table {
+    width: 100% !important;
+    min-width: 100%;
+  }
+
   /* Hide secondary table columns on mobile */
   .desktop-only {
     display: none !important;
   }
 
   .judge-table th, .judge-table td {
-    padding: 0.6rem 0.4rem;
+    padding: 0.6rem 0.3rem !important;
     font-size: 0.85rem;
+  }
+
+  .judge-table th {
+    font-size: 0.8rem;
+  }
+
+  .project-details-card {
+    padding: 0.8rem 0.6rem !important;
+    border-radius: 10px;
+  }
+
+  .project-details-row td {
+    padding: 0.2rem 0.1rem !important;
   }
 }
 
