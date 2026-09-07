@@ -1388,14 +1388,14 @@ function openScoreModal(ideaId, stage = 'Screening') {
 
   // במידה והשופט כבר דירג רעיון זה - טעינת הציונים הקודמים לעריכה
   if (idea.myScore) {
-    if (relevanceInput) relevanceInput.value = idea.myScore.relevance || '3';
-    if (feasibilityInput) feasibilityInput.value = idea.myScore.feasibility || '3';
-    if (innovationInput) innovationInput.value = idea.myScore.innovation || '3';
+    if (relevanceInput) relevanceInput.value = idea.myScore.relevance || '5';
+    if (feasibilityInput) feasibilityInput.value = idea.myScore.feasibility || '5';
+    if (innovationInput) innovationInput.value = idea.myScore.innovation || '5';
     if (notesInput) notesInput.value = idea.myScore.notes || '';
   } else {
-    if (relevanceInput) relevanceInput.value = '3';
-    if (feasibilityInput) feasibilityInput.value = '3';
-    if (innovationInput) innovationInput.value = '3';
+    if (relevanceInput) relevanceInput.value = '5';
+    if (feasibilityInput) feasibilityInput.value = '5';
+    if (innovationInput) innovationInput.value = '5';
     if (notesInput) notesInput.value = '';
   }
 
