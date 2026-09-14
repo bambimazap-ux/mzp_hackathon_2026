@@ -153,6 +153,11 @@ function submitIdea(payload) {
     var sheet = ss.getSheetByName("Ideas");
     if (!sheet) return { status: "error", message: "Ideas sheet not found" };
 
+    var props = PropertiesService.getScriptProperties();
+    if (props.getProperty("IDEA_SUBMISSION_ACTIVE") === "false") {
+      return { status: "error", message: "הגשת הרעיונות סגורה כעת" };
+    }
+
     var lastRow = sheet.getLastRow();
     var nextId = 1;
     if (lastRow > 1) {
@@ -616,6 +621,7 @@ function getSystemSettings() {
   var props = PropertiesService.getScriptProperties();
   return {
     status: "success",
+    ideaSubmissionActive: props.getProperty("IDEA_SUBMISSION_ACTIVE") !== "false", // default: true
     judgingActive: props.getProperty("JUDGING_ACTIVE") !== "false", // default: true
     publicVotingActive: props.getProperty("PUBLIC_VOTING_ACTIVE") !== "false", // default: true
     leaderboardPublic: props.getProperty("LEADERBOARD_PUBLIC") === "true" // default: false
@@ -634,6 +640,9 @@ function updateSystemSettings(payload) {
 
   var props = PropertiesService.getScriptProperties();
   
+  if (payload.ideaSubmissionActive !== undefined) {
+    props.setProperty("IDEA_SUBMISSION_ACTIVE", String(payload.ideaSubmissionActive));
+  }
   if (payload.judgingActive !== undefined) {
     props.setProperty("JUDGING_ACTIVE", String(payload.judgingActive));
   }

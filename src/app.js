@@ -137,7 +137,12 @@ function initPortalUI() {
   const submitIdeaBtn = document.getElementById('open-submit-idea-btn');
   const ideaModal = document.getElementById('submit-idea-modal');
   if (submitIdeaBtn && ideaModal) {
-    submitIdeaBtn.addEventListener('click', () => {
+    submitIdeaBtn.addEventListener('click', (e) => {
+      if (submitIdeaBtn.disabled) {
+        e.preventDefault();
+        showToast('הגשת הרעיונות סגורה כעת', 'error');
+        return;
+      }
       ideaModal.classList.add('active');
     });
   }
@@ -1046,6 +1051,14 @@ function applySchedulePhaseLogic(result) {
       }
       break;
   }
+
+  // דריסת הגדרת מנהל: כיבוי הגשת רעיונות במידה וננעלה בפאנל הניהול
+  if (settings.ideaSubmissionActive === false) {
+    if (submitIdeaBtn) {
+      submitIdeaBtn.disabled = true;
+      submitIdeaBtn.innerHTML = '<i class="fa-solid fa-lock"></i> הגשת הרעיונות סגורה';
+    }
+  }
 }
 
 // ==========================================
@@ -1261,6 +1274,28 @@ window.toggleSetting = async (key, val) => {
 
 function updateSettingsUI(settings) {
   if (!settings) return;
+
+  // 0. הגשת רעיונות
+  const btnIdeaSubmissionEnable = document.getElementById('btn-idea-submission-enable');
+  const btnIdeaSubmissionDisable = document.getElementById('btn-idea-submission-disable');
+  const badgeIdeaSubmission = document.getElementById('status-badge-idea-submission');
+  const isIdeaSubmissionActive = settings.ideaSubmissionActive !== false;
+
+  if (btnIdeaSubmissionEnable && btnIdeaSubmissionDisable) {
+    btnIdeaSubmissionEnable.style.background = isIdeaSubmissionActive ? 'var(--accent-cyan)' : 'rgba(255,255,255,0.05)';
+    btnIdeaSubmissionEnable.style.color = isIdeaSubmissionActive ? 'var(--bg-color)' : 'var(--text-secondary)';
+    btnIdeaSubmissionEnable.style.borderColor = isIdeaSubmissionActive ? 'var(--accent-cyan)' : 'var(--panel-border)';
+
+    btnIdeaSubmissionDisable.style.background = !isIdeaSubmissionActive ? '#ef4444' : 'rgba(255,255,255,0.05)';
+    btnIdeaSubmissionDisable.style.color = !isIdeaSubmissionActive ? '#fff' : 'var(--text-secondary)';
+    btnIdeaSubmissionDisable.style.borderColor = !isIdeaSubmissionActive ? '#ef4444' : 'var(--panel-border)';
+  }
+  if (badgeIdeaSubmission) {
+    badgeIdeaSubmission.textContent = isIdeaSubmissionActive ? 'פתוח להגשה' : 'הגשה נעולה';
+    badgeIdeaSubmission.style.background = isIdeaSubmissionActive ? 'rgba(0,245,212,0.15)' : 'rgba(239,68,68,0.15)';
+    badgeIdeaSubmission.style.color = isIdeaSubmissionActive ? 'var(--accent-cyan)' : '#ef4444';
+    badgeIdeaSubmission.style.border = isIdeaSubmissionActive ? '1px solid rgba(0,245,212,0.3)' : '1px solid rgba(239,68,68,0.3)';
+  }
 
   // 1. הצבעת קהל
   const btnVotingEnable = document.getElementById('btn-voting-enable');

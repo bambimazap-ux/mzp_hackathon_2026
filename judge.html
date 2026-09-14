@@ -231,6 +231,25 @@
           
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
             
+            <!-- Toggle 0: Idea Submission Phase -->
+            <div class="settings-card" style="background: rgba(255,255,255,0.02); border: 1px solid var(--panel-border); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
+              <div>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+                  <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin: 0;"><i class="fa-solid fa-lightbulb"></i> שלב הגשת רעיונות</h4>
+                  <span id="status-badge-idea-submission" style="font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: 600;">טוען...</span>
+                </div>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">שליטה האם משתמשים וצוותים יכולים להגיש רעיונות חדשים להאקתון דרך הטופס באתר.</p>
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <button class="btn btn-primary" id="btn-idea-submission-enable" onclick="toggleSetting('ideaSubmissionActive', true)" style="flex: 1;">
+                  <i class="fa-solid fa-play"></i> פתח הגשה
+                </button>
+                <button class="btn btn-secondary" id="btn-idea-submission-disable" onclick="toggleSetting('ideaSubmissionActive', false)" style="flex: 1;">
+                  <i class="fa-solid fa-lock"></i> נעל הגשה
+                </button>
+              </div>
+            </div>
+
             <!-- Toggle 1: Public Voting -->
             <div class="settings-card" style="background: rgba(255,255,255,0.02); border: 1px solid var(--panel-border); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
               <div>
