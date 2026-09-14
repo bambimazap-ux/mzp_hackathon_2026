@@ -31,17 +31,17 @@ const GEMINI_MODEL = "gemini-3.1-flash-lite";
 // 1. טיפול בבקשות GET (משיכת נתונים ציבוריים)
 // ==========================================
 function doGet(e) {
-  var action = e.parameter.action;
+  var action = (e && e.parameter && e.parameter.action) ? e.parameter.action : "get_public_data";
   var response = {};
 
   try {
     if (action === "get_public_data") {
       response = getPublicData();
     } else {
-      response = { status: "error", message: "Action not found or GET not supported for this action" };
+      response = { status: "error", message: "Action not found or GET not supported for this action: " + action };
     }
   } catch (error) {
-    response = { status: "error", message: error.toString() };
+    response = { status: "error", message: "Script Error: " + error.toString() };
   }
 
   return ContentService.createTextOutput(JSON.stringify(response))
@@ -95,12 +95,20 @@ function doPost(e) {
 // משיכת נתונים לפאנל הציבורי (רעיונות ושותפים) - ללא ציונים חסויים
 function getPublicData() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (!ss) {
+    return {
+      status: "error",
+      message: "הסקריפט אינו מקושר לגיליון Google Sheets פעיל. יש לוודא שהסקריפט נוצר מתוך הגיליון (הרחבות -> Apps Script)."
+    };
+  }
   
   // 1. קריאת רעיונות (8 עמודות כולל הצבעות)
   var ideasSheet = ss.getSheetByName("Ideas");
   var ideas = [];
   if (ideasSheet && ideasSheet.getLastRow() > 1) {
-    var data = ideasSheet.getRange(2, 1, ideasSheet.getLastRow() - 1, 8).getValues();
+    var lastRow = ideasSheet.getLastRow();
+    var lastCol = Math.max(ideasSheet.getLastColumn(), 8);
+    var data = ideasSheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
     ideas = data.map(function(row) {
       return {
         id: row[0],
@@ -119,7 +127,9 @@ function getPublicData() {
   var teammatesSheet = ss.getSheetByName("Teammates");
   var teammates = [];
   if (teammatesSheet && teammatesSheet.getLastRow() > 1) {
-    var data = teammatesSheet.getRange(2, 1, teammatesSheet.getLastRow() - 1, 6).getValues();
+    var lastRow = teammatesSheet.getLastRow();
+    var lastCol = Math.max(teammatesSheet.getLastColumn(), 6);
+    var data = teammatesSheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
     teammates = data.map(function(row) {
       return {
         id: row[0],
