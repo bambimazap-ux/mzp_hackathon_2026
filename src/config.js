@@ -5,9 +5,9 @@ const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwmrm9QzQLITH
 
 // Schedule configuration
 const HACKATHON_START = new Date('2026-08-23'); // Sunday
-const REGISTRATION_END = new Date('2026-09-10'); // Thursday (Before Rosh Hashanah)
-const VOTING_START = new Date('2026-09-10'); // Thursday
-const VOTING_END = new Date('2026-09-17'); // Thursday
+const REGISTRATION_END = new Date('2026-09-13'); // Sunday
+const VOTING_START = new Date('2026-09-14'); // Monday - Voting active
+const VOTING_END = new Date('2026-09-24'); // Thursday
 const HACKATHON_DAY = new Date('2026-10-07'); // Wednesday
 
 /**

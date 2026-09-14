@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
 async function apiGet(params = {}) {
   if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_SCRIPT_WEB_APP_URL_HERE') {
     console.warn('כתובת ה-API אינה מוגדרת בקובץ config.js');
-    return { status: 'error', message: 'כתובת ה-API אינה מוגדרת' };
+    return { status: 'error', message: 'כתובת ה-API אינה מוגדרת בקובץ config.js' };
   }
 
   // בניית מחרוזת הפרמטרים
@@ -34,11 +34,26 @@ async function apiGet(params = {}) {
       mode: 'cors'
     });
     
-    if (!response.ok) throw new Error('שגיאת רשת במשיכת נתונים');
-    return await response.json();
+    if (!response.ok) {
+      throw new Error(`שגיאת HTTP ${response.status} במשיכת נתונים מהשרת`);
+    }
+
+    const text = await response.text();
+    try {
+      return JSON.parse(text);
+    } catch (jsonErr) {
+      if (text.includes('googleusercontent') || text.includes('Accounts') || text.includes('login') || text.includes('הדף לא נמצא') || text.includes('drive-logo')) {
+        throw new Error('הרשאות גישה חסרות ב-Google Apps Script. יש לוודא שהפריסה (Deployment) מוגדרת ל-"Who has access: Anyone".');
+      }
+      throw new Error('התקבלה תשובה שאינה בפורמט JSON תקין מהשרת: ' + text.substring(0, 100));
+    }
   } catch (error) {
     console.error('API GET Error:', error);
-    return { status: 'error', message: error.message };
+    let errorMsg = error.message;
+    if (error.name === 'TypeError' && (error.message.includes('fetch') || error.message.includes('NetworkError') || error.message.includes('Failed to fetch'))) {
+      errorMsg = 'שגיאת רשת / CORS: לא ניתן להתחבר ל-Google Apps Script. ודאו שהפריסה מוגדרת ל-Anyone בנגישות ושהקישור מעודכן ב-config.js.';
+    }
+    return { status: 'error', message: errorMsg };
   }
 }
 
@@ -274,83 +289,99 @@ function setTimelineDates() {
 
 // טעינת נתונים לפורטל הציבורי
 async function loadPortalData() {
-  const result = await apiGet({ action: 'get_public_data' });
-  
-  if (result.status === 'success') {
-    // 1. עדכון לוח שותפים
-    allTeammates = result.teammates || [];
-    renderTeammates('all');
-
-    // 2. עדכון לוח הרעיונות והצבעות הקהל
-    const settings = result.settings || {};
+  try {
+    const result = await apiGet({ action: 'get_public_data' });
     
-    renderPublicIdeas(result.ideas || [], settings);
+    if (result.status === 'success') {
+      // 1. עדכון לוח שותפים
+      allTeammates = result.teammates || [];
+      renderTeammates('all');
 
-    // 3. עדכון ציר הזמן והתוצרים (POC Showcase / גמר ההאקתון)
-    const finalists = result.ideas ? result.ideas.filter(idea => idea.status === 'נבחר להאקתון' || idea.status === 'זוכה') : [];
-    
-    const pocSection = document.getElementById('poc-showcase-section');
-    const pocContainer = document.getElementById('poc-container');
-    const step1 = document.getElementById('tl-step-1');
-    const step2 = document.getElementById('tl-step-2');
-    const step3 = document.getElementById('tl-step-3');
-
-    // קידום ציר הזמן לפי המצב בפועל
-    if (finalists.length > 0) {
-      if (step1) step1.classList.remove('active');
-      if (step2) step2.classList.add('active');
+      // 2. עדכון לוח הרעיונות והצבעות הקהל
+      const settings = result.settings || {};
       
-      const hasWinner = finalists.some(idea => idea.status === 'זוכה');
-      if (hasWinner && step3) {
-        step3.classList.add('active');
-      }
-    }
+      renderPublicIdeas(result.ideas || [], settings);
 
-    const isLeaderboardPublic = settings.leaderboardPublic === true;
+      // 3. עדכון ציר הזמן והתוצרים (POC Showcase / גמר ההאקתון)
+      const finalists = result.ideas ? result.ideas.filter(idea => idea.status === 'נבחר להאקתון' || idea.status === 'זוכה') : [];
+      
+      const pocSection = document.getElementById('poc-showcase-section');
+      const pocContainer = document.getElementById('poc-container');
+      const step1 = document.getElementById('tl-step-1');
+      const step2 = document.getElementById('tl-step-2');
+      const step3 = document.getElementById('tl-step-3');
 
-    if (finalists.length > 0 && isLeaderboardPublic) {
-      if (pocSection && pocContainer) {
-        pocSection.style.display = 'block';
-        pocContainer.innerHTML = '';
+      // קידום ציר הזמן לפי המצב בפועל
+      if (finalists.length > 0) {
+        if (step1) step1.classList.remove('active');
+        if (step2) step2.classList.add('active');
         
-        finalists.forEach(proj => {
-          const isWinner = proj.status === 'זוכה';
-          const badgeText = isWinner ? '<span class="status active" style="background: rgba(57, 255, 20, 0.15); color: var(--accent-neon); border: 1px solid var(--accent-neon);">🏆 מקום ראשון</span>' : '';
-          const card = document.createElement('div');
-          card.className = 'poc-card';
-          card.innerHTML = `
-            <div>
-              <div class="poc-title">${proj.title} ${badgeText}</div>
-              <div class="poc-members"><i class="fa-solid fa-users"></i> צוות: ${proj.teammates}</div>
-              <div class="poc-desc">${proj.problem}</div>
-            </div>
-            <div>
-              <a href="${proj.projectURL || '#'}" target="_blank" class="btn btn-primary" style="width: 100%; text-align: center; ${proj.projectURL ? '' : 'opacity: 0.5; pointer-events: none;'}" ${proj.projectURL ? '' : 'title="קישור לאפליקציה יופעל ביום ההאקתון"'}>
-                <i class="fa-solid fa-arrow-up-right-from-square"></i> ${proj.projectURL ? 'פתח אפליקציה / POC' : 'האפליקציה תעלה בקרוב'}
-              </a>
-            </div>
-          `;
-          pocContainer.appendChild(card);
-        });
+        const hasWinner = finalists.some(idea => idea.status === 'זוכה');
+        if (hasWinner && step3) {
+          step3.classList.add('active');
+        }
       }
-    } else {
-      if (pocSection) pocSection.style.display = 'none';
-    }
 
-    // החלת לוגיקת השלבים והממשק הדינמית בהתאם ללוח הזמנים
-    applySchedulePhaseLogic(result);
-  } else {
-    // שגיאה בטעינת נתונים
-    const teammateContainer = document.getElementById('teammate-container');
-    if (teammateContainer) {
-      teammateContainer.innerHTML = `
-        <div style="grid-column: 1/-1; text-align: center; color: var(--error-color); padding: 2rem;">
-          <i class="fa-solid fa-triangle-exclamation" style="font-size: 2rem; margin-bottom: 1rem;"></i>
-          <p>שגיאה בטעינת הנתונים מגוגל שיטס. אנא ודאו שקישור ה-API ב-config.js מעודכן.</p>
-        </div>
-      `;
+      const isLeaderboardPublic = settings.leaderboardPublic === true;
+
+      if (finalists.length > 0 && isLeaderboardPublic) {
+        if (pocSection && pocContainer) {
+          pocSection.style.display = 'block';
+          pocContainer.innerHTML = '';
+          
+          finalists.forEach(proj => {
+            const isWinner = proj.status === 'זוכה';
+            const badgeText = isWinner ? '<span class="status active" style="background: rgba(57, 255, 20, 0.15); color: var(--accent-neon); border: 1px solid var(--accent-neon);">🏆 מקום ראשון</span>' : '';
+            const card = document.createElement('div');
+            card.className = 'poc-card';
+            card.innerHTML = `
+              <div>
+                <div class="poc-title">${proj.title} ${badgeText}</div>
+                <div class="poc-members"><i class="fa-solid fa-users"></i> צוות: ${proj.teammates}</div>
+                <div class="poc-desc">${proj.problem}</div>
+              </div>
+              <div>
+                <a href="${proj.projectURL || '#'}" target="_blank" class="btn btn-primary" style="width: 100%; text-align: center; ${proj.projectURL ? '' : 'opacity: 0.5; pointer-events: none;'}" ${proj.projectURL ? '' : 'title="קישור לאפליקציה יופעל ביום ההאקתון"'}>
+                  <i class="fa-solid fa-arrow-up-right-from-square"></i> ${proj.projectURL ? 'פתח אפליקציה / POC' : 'האפליקציה תעלה בקרוב'}
+                </a>
+              </div>
+            `;
+            pocContainer.appendChild(card);
+          });
+        }
+      } else {
+        if (pocSection) pocSection.style.display = 'none';
+      }
+
+      // החלת לוגיקת השלבים והממשק הדינמית בהתאם ללוח הזמנים
+      applySchedulePhaseLogic(result);
+    } else {
+      // שגיאה בטעינת נתונים
+      displayDataLoadError(result.message || 'שגיאה בטעינת הנתונים מגוגל שיטס.');
     }
+  } catch (err) {
+    console.error('Uncaught error in loadPortalData:', err);
+    displayDataLoadError(err.message || 'חלה שגיאה בלתי צפויה ברינדור הנתונים.');
   }
+}
+
+function displayDataLoadError(message) {
+  const teammateContainer = document.getElementById('teammate-container');
+  const publicIdeasContainer = document.getElementById('public-ideas-container');
+
+  const errorHtml = `
+    <div style="grid-column: 1/-1; text-align: center; color: var(--error-color); padding: 2rem; background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 12px;">
+      <i class="fa-solid fa-triangle-exclamation" style="font-size: 2.2rem; margin-bottom: 1rem; color: #ef4444;"></i>
+      <h4 style="color: #ef4444; margin-bottom: 0.5rem; font-weight: 700;">שגיאה בטעינת הנתונים מגוגל שיטס</h4>
+      <p style="color: var(--text-secondary); font-size: 0.95rem; max-width: 600px; margin: 0 auto 1rem auto;">${escapeHtml(message)}</p>
+      <button class="btn btn-secondary" onclick="loadPortalData()" style="font-size: 0.85rem; padding: 0.4rem 1rem; cursor: pointer;">
+        <i class="fa-solid fa-rotate-right"></i> נסה לטעון שוב
+      </button>
+    </div>
+  `;
+
+  if (teammateContainer) teammateContainer.innerHTML = errorHtml;
+  if (publicIdeasContainer) publicIdeasContainer.innerHTML = errorHtml;
 }
 
 // רינדור כרטיסיות גיוס שותפים
@@ -776,7 +807,7 @@ function getChatbotWelcomeMessage(phase) {
       איזה רעיון מעניין הייתם רוצים לפתח? ספרו לי עליו!`;
 
     case 'VOTING':
-      return `שלום! שלב ההרשמה הסתיים, ושבוע הצבעת הקהל פתוח כעת (עד ה-03.09.2026)! 🗳️
+      return `שלום! שלב ההרשמה והגשת הרעיונות הסתיים, ושבוע הצבעת הקהל פתוח כעת! 🗳️
       <br><br>
       אני כאן כדי לעזור לכם:
       <br>
