@@ -1,7 +1,7 @@
 // קובץ הגדרות לפורטל האקתון AI מז"פ 2026
 // הדבק כאן את כתובת ה-Web App שקיבלת לאחר פריסת ה-Google Apps Script
 
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwmrm9QzQLITHYLzMEojQ9lgvgI73XDEhY9pIKpyIjZKILtHfBpBvMugEMTWltRYZCq/exec';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwpUOn0ckuc5iCrfOWqjGD4WpSm5nUYSUhNev4IIcY8Diow1BCjpYrDVgt-0sP_eaeO/exec';
 
 // Schedule configuration
 const HACKATHON_START = new Date('2026-08-23'); // Sunday
