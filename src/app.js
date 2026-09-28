@@ -1746,6 +1746,7 @@ async function handleScoreSubmission(e) {
     password: currentJudgeAuth.password,
     judgeName: currentJudgeAuth.judgeName,
     ideaId: Number(ideaId),
+    ideaTitle: currentIdeaToScore ? currentIdeaToScore.title : '',
     relevance: relevance,
     feasibility: feasibility,
     innovation: innovation,

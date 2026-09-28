@@ -310,7 +310,7 @@ function getJudgingData(payload) {
   var scoresSheet = ss.getSheetByName("Scores");
   var scores = [];
   if (scoresSheet && scoresSheet.getLastRow() > 1) {
-    var data = scoresSheet.getRange(2, 1, scoresSheet.getLastRow() - 1, 10).getValues();
+    var data = scoresSheet.getRange(2, 1, scoresSheet.getLastRow() - 1, 11).getValues();
     scores = data.map(function(row) {
       return {
         id: row[0],
@@ -322,7 +322,8 @@ function getJudgingData(payload) {
         innovation: Number(row[6]) || 0,
         notes: row[7],
         average: Number(row[8]) || 0,
-        judgeName: String(row[9] || row[2])
+        judgeName: String(row[9] || row[2]),
+        ideaTitle: String(row[10] || "")
       };
     });
   }
@@ -427,11 +428,30 @@ function submitScore(payload) {
     var notes = payload.notes || "";
     var timestamp = new Date();
 
+    var ideaTitle = payload.ideaTitle || "";
+    if (!ideaTitle && ideaId) {
+      var ideasSheet = ss.getSheetByName("Ideas");
+      if (ideasSheet && ideasSheet.getLastRow() > 1) {
+        var ideasData = ideasSheet.getRange(2, 1, ideasSheet.getLastRow() - 1, 3).getValues();
+        for (var j = 0; j < ideasData.length; j++) {
+          if (Number(ideasData[j][0]) === ideaId) {
+            ideaTitle = String(ideasData[j][2]);
+            break;
+          }
+        }
+      }
+    }
+
+    // הגדרת כותרת עמודה 11 בגיליון אם טרם הוגדרה
+    if (sheet.getRange(1, 11).getValue() === "") {
+      sheet.getRange(1, 11).setValue("IdeaTitle");
+    }
+
     // חיפוש האם כבר קיים ציון קודם של אותו שופט עבור רעיון זה
     var existingRowIndex = -1;
     if (lastRow > 1) {
-      // עמודות: ID | Timestamp | JudgeUsername | IdeaID | Relevance | Feasibility | Innovation | Notes | Average | JudgeName
-      var data = sheet.getRange(2, 1, lastRow - 1, 10).getValues();
+      // עמודות: ID | Timestamp | JudgeUsername | IdeaID | Relevance | Feasibility | Innovation | Notes | Average | JudgeName | IdeaTitle
+      var data = sheet.getRange(2, 1, lastRow - 1, 11).getValues();
       for (var i = 0; i < data.length; i++) {
         var rowJudgeU = String(data[i][2]).trim();
         var rowIdeaId = Number(data[i][3]);
@@ -451,6 +471,7 @@ function submitScore(payload) {
       sheet.getRange(existingRowIndex, 8).setValue(notes);
       sheet.getRange(existingRowIndex, 9).setValue(average);
       sheet.getRange(existingRowIndex, 10).setValue(judgeName);
+      sheet.getRange(existingRowIndex, 11).setValue(ideaTitle);
 
       return { status: "success", id: sheet.getRange(existingRowIndex, 1).getValue(), action: "updated" };
     } else {
@@ -470,7 +491,8 @@ function submitScore(payload) {
         innovation, 
         notes, 
         average,
-        judgeName
+        judgeName,
+        ideaTitle
       ]);
 
       return { status: "success", id: nextId, action: "created" };
